@@ -9,7 +9,6 @@
 <meta property="og:description" content="Marketing digital. Una web viva que cambia con la hora del día y esconde secretos.">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#1b1430">
-<link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -224,9 +223,10 @@
   document.querySelectorAll('.fade').forEach(el => setTimeout(() => el.classList.add('on'), reduce ? 0 : +el.dataset.d || 0));
 
   /* ---------- Secretos y consejos ---------- */
-  const SECRETS = ['agua', 'molino', 'quijote', 'castillo', 'cielo'];
+  const SECRETS = ['agua', 'molino', 'quijote', 'castillo', 'cielo', 'clavileno'];
   const found = new Set();
-  try { JSON.parse(localStorage.getItem('hv-secretos') || '[]').forEach(x => SECRETS.includes(x) && found.add(x)); } catch (e) {}
+  try { localStorage.removeItem('hv-secretos'); } catch (e) {}
+  try { JSON.parse(sessionStorage.getItem('hv-secretos') || '[]').forEach(x => SECRETS.includes(x) && found.add(x)); } catch (e) {}
   const dotsEl = document.getElementById('dots'), countEl = document.getElementById('count'), countText = document.getElementById('countText');
   dotsEl.innerHTML = SECRETS.map(() => '<i></i>').join('');
   function renderCount() {
@@ -237,7 +237,7 @@
   function discover(id) {
     if (found.has(id)) return;
     found.add(id);
-    try { localStorage.setItem('hv-secretos', JSON.stringify([...found])); } catch (e) {}
+    try { sessionStorage.setItem('hv-secretos', JSON.stringify([...found])); } catch (e) {}
     renderCount(); countEl.classList.remove('pulse'); void countEl.offsetWidth; countEl.classList.add('pulse');
     if (found.size === SECRETS.length) setTimeout(() => {
       say(W / 2, surf - 40, '¡Bingo! Los has encontrado todos. Escríbenos y seguimos jugando', 4.5);
@@ -530,6 +530,22 @@
     const hy = m.base - 39 * S;
     for (let i = 0; i < 6; i++) addToken(m.x + rnd(-20, 20), hy - rnd(0, 20), words[(Math.random() * words.length) | 0], true);
   }
+  // Clavileño: el caballo de madera volador, con Don Quijote y Sancho con los ojos vendados
+  const CV = { on: false, x: 0, y: 0, base: 0, t: 0, v: 0, climb: 0, next: params.has('clavileno') ? 2 : 14, sparks: [] };
+  function spawnClavileno() {
+    CV.on = true; CV.t = 0; CV.climb = 0; CV.x = -70; CV.v = W < 700 ? 42 : 62;
+    CV.base = surf * (W < 700 ? rnd(.1, .2) : rnd(.12, .3));
+  }
+  function clavHit(px, py) {
+    if (!CV.on) return false; const k = S;
+    return px > CV.x - 24 * k && px < CV.x + 24 * k && py > CV.y - 22 * k && py < CV.y + 14 * k;
+  }
+  function launchClavileno() {
+    discover('clavileno'); CV.climb = 1;
+    say(CV.x, CV.y - 26 * S, 'Lanzamientos que despegan', 2.4);
+    for (let i = 0; i < 9; i++) addToken(CV.x + rnd(-30, 10), CV.y + rnd(-10, 10), ['★', '✦', '+1'][i % 3], true);
+    for (let i = 0; i < 40; i++) CV.sparks.push({ x: CV.x - 16 * S, y: CV.y, vx: rnd(-140, 40), vy: rnd(-90, 90), life: 0, max: rnd(.5, 1.1) });
+  }
   // estrella fugaz de noche
   let shoot = null, shootT = rnd(6, 14);
   function shootHit(px, py) {
@@ -586,13 +602,14 @@
   back.addEventListener('pointermove', e => {
     setPtr(e);
     const X = e.clientX, Y = e.clientY;
-    back.style.cursor = (quijoteHit(X, Y) || millHit(X, Y) || shootHit(X, Y) || castleHit(X, Y) || skyHit(X, Y)) ? 'help' : 'pointer';
+    back.style.cursor = (clavHit(X, Y) || quijoteHit(X, Y) || millHit(X, Y) || shootHit(X, Y) || castleHit(X, Y) || skyHit(X, Y)) ? 'help' : 'pointer';
   });
   back.addEventListener('pointerleave', () => ptr.on = false);
   back.addEventListener('pointerup', () => { if (touch) ptr.on = false; });
   back.addEventListener('pointerdown', e => {
     setPtr(e);
     const x = e.clientX, y = e.clientY;
+    if (clavHit(x, y)) { launchClavileno(); return; }
     if (quijoteHit(x, y)) { chargeQuijote(); return; }
     const m = millHit(x, y);
     if (m) { discover('molino'); spinMill(m, ['+1', 'clic', '↑', '%', 'visitas', '+1']); say(m.x, m.base - 80 * S, 'Así se mueve una web con buen tráfico', 2.4); return; }
@@ -734,6 +751,17 @@
       }
       if (Q.x < crest.x - crest.w * 1.15 || Q.x < -60) { Q.on = false; Q.next = rnd(25, 40); }
     }
+    // Clavileño cruza el cielo cada cierto tiempo
+    if (!CV.on) { CV.next -= dt; if (CV.next <= 0 && !reduce) spawnClavileno(); }
+    else {
+      CV.t += dt; CV.climb *= Math.pow(.6, dt);
+      CV.x += CV.v * (1 + CV.climb * 2.2) * dt;
+      CV.base -= CV.climb * 70 * dt;
+      CV.y = CV.base + Math.sin(CV.t * 1.6) * 8 * S;
+      if (Math.random() < .55) CV.sparks.push({ x: CV.x - 17 * S, y: CV.y + 1 * S, vx: rnd(-60, -20), vy: rnd(-12, 18), life: 0, max: rnd(.4, .9) });
+      if (CV.x > W + 80 || CV.base < -40) { CV.on = false; CV.next = rnd(35, 55); }
+    }
+    for (let i = CV.sparks.length - 1; i >= 0; i--) { const p = CV.sparks[i]; p.life += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 40 * dt; if (p.life > p.max) CV.sparks.splice(i, 1); }
     // estrella fugaz (solo de noche)
     shootT -= dt;
     if (!shoot && shootT <= 0 && env.stars > .5) { shoot = { x: rnd(W * .2, W * .9), y: rnd(surf * .05, surf * .3), vx: -rnd(260, 380), vy: rnd(70, 120), life: 0 }; shootT = rnd(12, 22); }
@@ -821,6 +849,32 @@
 
   }
 
+  function drawClavileno(ctx) {
+    const k = S, col = rgba(env.silh);
+    ctx.save(); ctx.translate(CV.x, CV.y); ctx.rotate(Math.sin(CV.t * 1.6 + 1) * .05 - CV.climb * .35);
+    ctx.fillStyle = col; ctx.strokeStyle = col; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    // caballo de madera, patas rígidas
+    ctx.lineWidth = 1.8 * k; ctx.beginPath();
+    ctx.moveTo(8 * k, 2 * k); ctx.lineTo(14 * k, 7 * k); ctx.moveTo(6 * k, 2 * k); ctx.lineTo(10 * k, 9 * k);
+    ctx.moveTo(-8 * k, 2 * k); ctx.lineTo(-14 * k, 7 * k); ctx.moveTo(-6 * k, 2 * k); ctx.lineTo(-11 * k, 9 * k); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(0, 0, 13 * k, 4.4 * k, 0, 0, 6.2832); ctx.fill();
+    ctx.lineWidth = 3 * k; ctx.beginPath(); ctx.moveTo(9 * k, -2 * k); ctx.lineTo(13 * k, -9 * k); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(16 * k, -10 * k, 4.5 * k, 2.2 * k, .35, 0, 6.2832); ctx.fill();
+    ctx.lineWidth = 1.2 * k; ctx.beginPath(); ctx.moveTo(14.5 * k, -12 * k); ctx.lineTo(14 * k, -15.5 * k); ctx.stroke();   // la clavija
+    ctx.beginPath(); ctx.arc(14 * k, -16 * k, 1.1 * k, 0, 6.2832); ctx.fill();
+    ctx.lineWidth = 1.6 * k; ctx.beginPath(); ctx.moveTo(-13 * k, -1 * k); ctx.lineTo(-17 * k, 1.5 * k); ctx.stroke();
+    // Don Quijote delante, Sancho detrás
+    ctx.lineWidth = 2.4 * k; ctx.beginPath(); ctx.moveTo(3 * k, -3 * k); ctx.lineTo(4 * k, -13 * k); ctx.stroke();
+    ctx.lineWidth = 1.4 * k; ctx.beginPath(); ctx.moveTo(4 * k, -10 * k); ctx.lineTo(12 * k, -13 * k); ctx.stroke();
+    ctx.beginPath(); ctx.arc(4.5 * k, -15.5 * k, 2 * k, 0, 6.2832); ctx.fill();
+    ctx.beginPath(); ctx.arc(-5 * k, -7 * k, 4 * k, 0, 6.2832); ctx.fill();
+    ctx.beginPath(); ctx.arc(-5 * k, -12.6 * k, 2.2 * k, 0, 6.2832); ctx.fill();
+    // vendas en los ojos
+    ctx.strokeStyle = env.light ? 'rgba(255,250,240,.95)' : 'rgba(255,230,200,.85)'; ctx.lineWidth = .9 * k;
+    ctx.beginPath(); ctx.moveTo(2.6 * k, -16 * k); ctx.lineTo(6.6 * k, -16 * k); ctx.moveTo(-7.2 * k, -13 * k); ctx.lineTo(-2.8 * k, -13 * k); ctx.stroke();
+    ctx.restore();
+  }
+
   function draw() {
     const x = bx, e = env;
     sc.drawImage(bgC, 0, 0, W, surf + 2);
@@ -843,6 +897,13 @@
       x.lineTo(shoot.x - shoot.vx / 300 * len, shoot.y - shoot.vy / 300 * len); x.stroke();
     }
 
+    // chispas de la cola de Clavileño (los cohetes del libro)
+    if (CV.sparks.length) {
+      x.globalCompositeOperation = 'lighter';
+      for (const p of CV.sparks) { const a = 1 - p.life / p.max; x.fillStyle = `rgba(255,${150 + 80 * a | 0},70,${.85 * a})`; x.beginPath(); x.arc(p.x, p.y, 1.2 + 1.6 * a, 0, 6.2832); x.fill(); }
+      x.globalCompositeOperation = 'source-over';
+    }
+    if (CV.on) drawClavileno(x);
     if (flock) {
       x.strokeStyle = rgba(e.bird); x.lineWidth = 1.4; x.lineCap = 'round';
       for (let i = 0; i < flock.n; i++) {
@@ -992,6 +1053,7 @@
       if (!found.has('agua') && vents[1]) hot(vents[1].x, surfAt(vents[1].x) + 24, 0);
       if (!found.has('molino') && mills.length) { const m = mills[(mills.length - 1) >> 1]; hot(m.x, m.base - 39 * S, .25); }
       if (!found.has('quijote') && Q.on && Q.state === 'walk') { const k3 = S * 1.1; hot(Q.x, groundY(Q.x) - 46 * k3, .5); }
+      if (!found.has('clavileno') && CV.on) hot(CV.x, CV.y - 24 * S, .6);
       if (!found.has('castillo') && castle.top) hot(castle.top.x, castle.top.y - 6, .75);
       const d = sunDisc || moonPos;
       if (!found.has('cielo') && d) hot(d.x + d.r * .9, d.y - d.r * .9, .4);
@@ -1027,7 +1089,7 @@
     }
   }
 
-  if (params.has('debug')) window.__hv = { Q, groundY, mills, spawnQuijote, castle, found, get castleNow() { return castle; }, get S() { return S; } };
+  if (params.has('debug')) window.__hv = { Q, CV, groundY, mills, spawnQuijote, castle, found, get castleNow() { return castle; }, get S() { return S; } };
   requestAnimationFrame(frame);
 })();
 </script>
