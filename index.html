@@ -494,7 +494,6 @@
   const Q = { on: false, x: 0, dir: -1, phase: 0, state: 'walk', t: 0, tumble: 0, target: null, next: params.has('quijote') ? 1.5 : 7, seen: 0 };
   function spawnQuijote() {
     Q.on = true; Q.dir = -1; Q.x = crest.x + crest.w * 1.05; Q.state = 'walk'; Q.tumble = 0; Q.lift = 0; Q.tilt = 0; Q.t = 0; Q.target = null; Q.seen++;
-    if (Q.seen === 1) say(Q.x - 10 * S, groundY(Q.x) - 52 * S, touch ? '¡Tócame y verás!' : '¡Pínchame y verás!', 3.2);
   }
   const groundY = x => surf - crestH(x) + 1;
   function quijoteHit(px, py) {
@@ -507,7 +506,6 @@
     const ahead = mills.filter(m => (m.x - Q.x) * Q.dir > 6).sort((a, b) => Math.abs(a.x - Q.x) - Math.abs(b.x - Q.x));
     Q.target = ahead[0] || null;
     discover('quijote');
-    say(Q.x, groundY(Q.x) - 48 * S, Q.target ? '¡Son gigantes, Sancho!' : '¡A por ellos!', 1.8);
     Q.state = Q.target ? 'charge' : 'walk';
   }
   function castleHit(px, py) { const b = castle.box; return b && px > b[0] && px < b[2] && py > b[1] - 8 && py < b[3]; }
@@ -768,8 +766,7 @@
         if (Q.t > 1.15 || groundY(Q.x) - Q.lift < 40) {
           const vx = clamp(Q.x, 40, W - 40), vy = Math.max(40, groundY(Q.x) - Q.lift - 10 * k2);
           for (let i = 0; i < 60; i++) { const an = rnd(0, 6.28), sp = rnd(30, 170); CV.sparks.push({ x: vx, y: vy, vx: Math.cos(an) * sp, vy: Math.sin(an) * sp, life: 0, max: rnd(.6, 1.4) }); }
-          for (let i = 0; i < 8; i++) addToken(vx + rnd(-30, 30), vy + rnd(-20, 20), ['✦', '★', '¡puf!', '+1'][i % 4], true);
-          say(vx, vy - 12, '¿Esperabas que se estrellaran? Así se sorprende a un cliente', 3.8);
+          for (let i = 0; i < 8; i++) addToken(vx + rnd(-30, 30), vy + rnd(-20, 20), ['✦', '★', '✦', '+1'][i % 4], true);
           Q.on = false; Q.next = rnd(25, 40);
         }
       } else if (Q.state === 'fall') {
@@ -778,11 +775,10 @@
         if (Q.lift <= 0) { Q.lift = 0; Q.tilt = 0; Q.state = 'hit'; Q.t = .5; poke(Q.x, 0); }
       } else if (Q.state === 'hit') {
         Q.t += dt; Q.tumble = 1;
-        if (Q.t > .6 && Q.t - dt <= .6) say(Q.x - Q.dir * 26 * k2, groundY(Q.x) - 40 * S, '…que eran molinos, señor', 2.6);
         if (Q.t > 3.4) { Q.state = 'up'; Q.t = 0; }
       } else if (Q.state === 'up') {
         Q.t += dt; Q.tumble = Math.max(0, 1 - Q.t / .5);
-        if (Q.t > .6) { Q.state = 'walk'; Q.dir = -1; say(Q.x, groundY(Q.x) - 48 * S, 'Pero nadie lo olvidará, Sancho', 2.8); }
+        if (Q.t > .6) { Q.state = 'walk'; Q.dir = -1; }
       }
       if (Q.on && Q.state === 'walk' && (Q.x < crest.x - crest.w * 1.15 || Q.x < -60)) { Q.on = false; Q.next = rnd(25, 40); }
     }
