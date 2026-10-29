@@ -43,21 +43,23 @@
   #front{z-index:3;pointer-events:none}
 
   .stage{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;align-items:center;
-    padding:clamp(36px,9vh,104px) 16px 0;text-align:center;pointer-events:none}
+    padding:clamp(24px,8vh,104px) 16px 0;text-align:center;pointer-events:none}
   .kicker{margin:0;letter-spacing:.34em;text-transform:uppercase;font-size:12px;font-weight:500;color:var(--muted);
     text-shadow:0 1px 10px var(--shade)}
   h1{margin:.35em 0 .1em;line-height:.95;font-weight:600}
   h1 .row{display:block;white-space:nowrap}
-  h1 .r1{font-weight:600;letter-spacing:-.04em;font-size:clamp(50px,12vw,150px);text-shadow:0 4px 30px var(--shade)}
-  h1 .r2{font-weight:500;letter-spacing:-.035em;font-size:clamp(42px,10vw,124px);text-shadow:0 0 30px var(--shade)}
+  h1 .r1{font-weight:600;letter-spacing:-.04em;font-size:clamp(44px,min(12vw,14.5vh),150px);text-shadow:0 4px 30px var(--shade)}
+  h1 .r2{font-weight:500;letter-spacing:-.035em;font-size:clamp(36px,min(10vw,12vh),124px);text-shadow:0 0 30px var(--shade)}
   h1 .ch{display:inline-block;will-change:transform,opacity;transition:color 2s}
-  .tip{margin:.8em 0 0;font-size:clamp(15px,1.9vw,19px);line-height:1.45;color:var(--muted);max-width:42ch;min-height:2.9em;
+  .tip{margin:.8em 0 0;font-size:clamp(15px,1.9vw,19px);line-height:1.45;color:var(--muted);max-width:42ch;
     text-shadow:0 1px 14px var(--shade),0 0 3px var(--shade)}
   .tip span{display:inline-block;transition:opacity .6s ease,transform .6s ease}
   .tip span.out{opacity:0;transform:translateY(6px)}
   .tip b{font-weight:600;color:var(--ink)}
   .count{margin:.7em 0 0;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--soft);
     text-shadow:0 1px 10px var(--shade);display:flex;align-items:center;gap:.8em}
+  .value{margin:.75em 0 0;font-size:13px;line-height:1.45;color:var(--muted);max-width:64ch;text-shadow:0 1px 10px var(--shade),0 0 4px var(--shade),0 0 2px var(--shade)}
+  @media (max-width:420px){.value{font-size:12px;max-width:32ch}}
   .dots{display:inline-flex;gap:5px}
   .dots i{width:7px;height:7px;border-radius:50%;border:1px solid var(--accent);transition:background .4s,transform .4s}
   .dots i.on{background:var(--accent);transform:scale(1.15)}
@@ -69,7 +71,7 @@
     text-shadow:0 1px 10px var(--shade);display:flex;flex-wrap:wrap;justify-content:center;gap:.25em .1em}
   .services span{white-space:nowrap}
   .services i{font-style:normal;color:var(--accent);margin:0 .35em}
-  @media (max-width:420px){.tip{min-height:4.4em}.services{font-size:10.5px;letter-spacing:.1em;max-width:30ch}.kicker{letter-spacing:.2em;font-size:11px}}
+  @media (max-width:420px){.services{font-size:10.5px;letter-spacing:.1em;max-width:30ch}.kicker{letter-spacing:.2em;font-size:11px}}
 
   .foot{position:fixed;left:0;right:0;bottom:max(18px,env(safe-area-inset-bottom));z-index:4;
     display:flex;flex-direction:column;align-items:center;gap:12px;padding:0 16px;pointer-events:none}
@@ -99,6 +101,7 @@
     </h1>
     <p class="tip fade" data-d="2200" aria-live="polite"><span id="tipText"></span></p>
     <p class="count fade" data-d="2700" id="count"><span class="dots" id="dots"></span><span id="countText"></span></p>
+    <p class="value fade" data-d="3300" id="value">Una web así despierta la curiosidad de tus clientes y los conecta con tu marca.</p>
   </main>
 
 
@@ -118,7 +121,7 @@
   const front = document.getElementById('front'), fx = front.getContext('2d');
   const bgC = document.createElement('canvas'), bg = bgC.getContext('2d');   // paisaje fijo
   const scC = document.createElement('canvas'), sc = scC.getContext('2d');   // paisaje + aspas + personajes (se refleja)
-  const anchor = document.getElementById('count');
+  const anchor = document.getElementById('value');
   const FONT = "'Instrument Sans',system-ui,sans-serif";
 
   const rnd = (a, b) => a + Math.random() * (b - a);
@@ -228,7 +231,7 @@
   dotsEl.innerHTML = SECRETS.map(() => '<i></i>').join('');
   function renderCount() {
     [...dotsEl.children].forEach((d, i) => d.classList.toggle('on', i < found.size));
-    countText.textContent = found.size === SECRETS.length ? '¡Todos los secretos descubiertos!' : `${found.size} de ${SECRETS.length} secretos descubiertos`;
+    countText.textContent = found.size === SECRETS.length ? '¡Bingo!' : `${found.size} de ${SECRETS.length} para bingo`;
   }
   renderCount();
   function discover(id) {
@@ -237,7 +240,7 @@
     try { localStorage.setItem('hv-secretos', JSON.stringify([...found])); } catch (e) {}
     renderCount(); countEl.classList.remove('pulse'); void countEl.offsetWidth; countEl.classList.add('pulse');
     if (found.size === SECRETS.length) setTimeout(() => {
-      say(W / 2, surf - 40, '¡Los has encontrado todos! Escríbenos y seguimos jugando', 4.5);
+      say(W / 2, surf - 40, '¡Bingo! Los has encontrado todos. Escríbenos y seguimos jugando', 4.5);
       document.querySelector('.cta').classList.add('glow');
       for (let i = 0; i < 16; i++) addToken(W / 2 + rnd(-140, 140), surf - rnd(0, 90), ['★', '✦', '+1', '♥'][i % 4], true);
     }, 1400);
@@ -265,8 +268,7 @@
     tipEl.classList.add('out');
     setTimeout(() => { tipEl.innerHTML = t; tipEl.classList.remove('out'); }, 600);
   }
-  nextTip(true);
-  setInterval(nextTip, 6500);
+  tipEl.innerHTML = `Busca los puntos que laten y ${touch ? 'tócalos' : 'haz clic'}: <b>¡a por el bingo!</b>`;
 
   /* ---------- Sprites ---------- */
   function radial(stops) {
@@ -511,7 +513,7 @@
   function castleHit(px, py) { const b = castle.box; return b && px > b[0] && px < b[2] && py > b[1] - 8 && py < b[3]; }
   function skyHit(px, py) { const d = sunDisc || moonPos; return d && Math.hypot(px - d.x, py - d.y) < d.r * 1.8 + 10 ? d : null; }
   function drawFlag(ctx) {
-    if (!castle.flag || !castle.top) return;
+    if (!found.has('castillo') || !castle.top) return;
     const u = castle.u, x0 = castle.top.x, y0 = castle.top.y;
     ctx.strokeStyle = rgba(env.castle); ctx.lineWidth = Math.max(1, .3 * u); ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x0, y0 - 7 * u); ctx.stroke();
     ctx.fillStyle = env.light ? '#d2561c' : '#f0a04a'; ctx.beginPath();
@@ -593,14 +595,14 @@
     const x = e.clientX, y = e.clientY;
     if (quijoteHit(x, y)) { chargeQuijote(); return; }
     const m = millHit(x, y);
-    if (m) { discover('molino'); spinMill(m, ['+1', 'clic', '↑', '%', 'visitas', '+1']); say(m.x, m.base - 80 * S, 'Convertimos el viento en tráfico', 2.2); return; }
+    if (m) { discover('molino'); spinMill(m, ['+1', 'clic', '↑', '%', 'visitas', '+1']); say(m.x, m.base - 80 * S, 'Así se mueve una web con buen tráfico', 2.4); return; }
     if (shootHit(x, y)) {
       for (let i = 0; i < 8; i++) addToken(shoot.x + rnd(-20, 20), shoot.y + rnd(-10, 10), ['★', '✦', '+1', '♥'][i % 4], true);
       say(shoot.x, shoot.y - 16, 'Deseo concedido: más clientes ✦', 2.6); shoot = null; return;
     }
     if (castleHit(x, y)) {
-      castle.flag = true; discover('castillo');
-      say(castle.x, castle.box[1] - 4, 'Tu marca, a prueba de asedios', 2.4);
+      discover('castillo');
+      say(castle.x, castle.box[1] - 9 * castle.u, 'Te has fijado en él, ¿verdad? Así debe ser tu marca: una insignia que se ve desde lejos', 4);
       for (let i = 0; i < 7; i++) addToken(castle.top.x + rnd(-20, 20), castle.box[1] - rnd(0, 20), ['★', '✦', '+1', '♥'][i % 4], true);
       return;
     }
@@ -998,12 +1000,15 @@
     for (const b of speech) {
       const kk = b.life / b.max, a = kk < .1 ? kk / .1 : kk > .85 ? (1 - kk) / .15 : 1;
       fx.save(); fx.globalAlpha = a; fx.font = `600 13px ${FONT}`;
-      const tw = fx.measureText(b.text).width, pw = tw + 20, ph = 26;
+      const maxW = Math.min(300, W - 48), lines = [];
+      for (const w of b.text.split(' ')) { const cur = lines[lines.length - 1]; if (cur && fx.measureText(cur + ' ' + w).width <= maxW) lines[lines.length - 1] = cur + ' ' + w; else lines.push(w); }
+      const tw = Math.max(...lines.map(l => fx.measureText(l).width)), pw = tw + 22, ph = 10 + lines.length * 17;
       const bx0 = clamp(b.x - pw / 2, 8, W - pw - 8), by0 = b.y - ph - 8 - (1 - Math.min(1, kk * 6)) * 6;
       fx.fillStyle = 'rgba(255,250,240,.96)'; fx.shadowColor = 'rgba(0,0,0,.25)'; fx.shadowBlur = 10;
-      fx.beginPath(); fx.roundRect ? fx.roundRect(bx0, by0, pw, ph, 13) : fx.rect(bx0, by0, pw, ph); fx.fill();
+      fx.beginPath(); fx.roundRect ? fx.roundRect(bx0, by0, pw, ph, 12) : fx.rect(bx0, by0, pw, ph); fx.fill();
       fx.beginPath(); fx.moveTo(clamp(b.x, bx0 + 14, bx0 + pw - 14) - 6, by0 + ph - 1); fx.lineTo(clamp(b.x, bx0 + 14, bx0 + pw - 14), by0 + ph + 7); fx.lineTo(clamp(b.x, bx0 + 14, bx0 + pw - 14) + 6, by0 + ph - 1); fx.fill();
-      fx.shadowBlur = 0; fx.fillStyle = '#2a1a14'; fx.fillText(b.text, bx0 + pw / 2, by0 + ph / 2 + 1);
+      fx.shadowBlur = 0; fx.fillStyle = '#2a1a14';
+      lines.forEach((l, i) => fx.fillText(l, bx0 + pw / 2, by0 + 13.5 + i * 17));
       fx.restore();
     }
   }
@@ -1022,7 +1027,7 @@
     }
   }
 
-  if (params.has('debug')) window.__hv = { Q, groundY, mills, spawnQuijote, get S() { return S; } };
+  if (params.has('debug')) window.__hv = { Q, groundY, mills, spawnQuijote, castle, found, get castleNow() { return castle; }, get S() { return S; } };
   requestAnimationFrame(frame);
 })();
 </script>
