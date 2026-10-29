@@ -9,6 +9,7 @@
 <meta property="og:description" content="Marketing digital. Una web viva que cambia con la hora del día y esconde secretos.">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#1b1430">
+<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -493,7 +494,7 @@
   // Don Quijote y Sancho recorren la loma de los molinos cada cierto tiempo
   const Q = { on: false, x: 0, dir: -1, phase: 0, state: 'walk', t: 0, tumble: 0, target: null, next: params.has('quijote') ? 1.5 : 7, seen: 0 };
   function spawnQuijote() {
-    Q.on = true; Q.dir = -1; Q.x = crest.x + crest.w * 1.05; Q.state = 'walk'; Q.tumble = 0; Q.t = 0; Q.target = null; Q.seen++;
+    Q.on = true; Q.dir = -1; Q.x = crest.x + crest.w * 1.05; Q.state = 'walk'; Q.tumble = 0; Q.lift = 0; Q.tilt = 0; Q.t = 0; Q.target = null; Q.seen++;
     if (Q.seen === 1) say(Q.x - 10 * S, groundY(Q.x) - 52 * S, touch ? '¡Tócame, que voy a por los gigantes!' : '¡Pínchame, que voy a por los gigantes!', 3.2);
   }
   const groundY = x => surf - crestH(x) + 1;
@@ -521,6 +522,15 @@
     for (let i = 10; i >= 0; i--) { const t = i / 10; ctx.lineTo(x0 + t * 5 * u, y0 - 4.6 * u - t * 1.1 * u + Math.sin(T * 6 - t * 4) * .45 * u * t); }
     ctx.closePath(); ctx.fill();
   }
+  function takeOff() {
+    if (Q.state !== 'walk') return;
+    Q.state = 'fly'; Q.t = 0; Q.lift = 0; Q.tilt = 0;
+    discover('clavileno');
+    say(Q.x, groundY(Q.x) - 50 * S, '¡Agárrate, Sancho! Lanzamientos que despegan', 2.6);
+    const k = S * 1.1;
+    for (let i = 0; i < 9; i++) addToken(Q.x + rnd(-30, 30), groundY(Q.x) - rnd(10, 40), ['★', '✦', '+1'][i % 3], true);
+    for (let i = 0; i < 45; i++) CV.sparks.push({ x: Q.x - Q.dir * 20 * k, y: groundY(Q.x) - 4, vx: rnd(-90, 90), vy: rnd(-40, 30), life: 0, max: rnd(.5, 1.2) });
+  }
   function millHit(px, py) {
     for (const m of mills) { const hy = m.base - 39 * S; if (Math.hypot(px - m.x, py - hy) < 34 * S) return m; }
     return null;
@@ -531,7 +541,7 @@
     for (let i = 0; i < 6; i++) addToken(m.x + rnd(-20, 20), hy - rnd(0, 20), words[(Math.random() * words.length) | 0], true);
   }
   // Clavileño: el caballo de madera volador, con Don Quijote y Sancho con los ojos vendados
-  const CV = { on: false, x: 0, y: 0, base: 0, t: 0, v: 0, climb: 0, next: params.has('clavileno') ? 2 : 14, sparks: [] };
+  const CV = { on: false, x: 0, y: 0, base: 0, t: 0, v: 0, climb: 0, next: Infinity, sparks: [] };
   function spawnClavileno() {
     CV.on = true; CV.t = 0; CV.climb = 0; CV.x = -70; CV.v = W < 700 ? 42 : 62;
     CV.base = surf * (W < 700 ? rnd(.1, .2) : rnd(.12, .3));
@@ -610,7 +620,7 @@
     setPtr(e);
     const x = e.clientX, y = e.clientY;
     if (clavHit(x, y)) { launchClavileno(); return; }
-    if (quijoteHit(x, y)) { chargeQuijote(); return; }
+    if (quijoteHit(x, y)) { if (!found.has('quijote')) chargeQuijote(); else takeOff(); return; }
     const m = millHit(x, y);
     if (m) { discover('molino'); spinMill(m, ['+1', 'clic', '↑', '%', 'visitas', '+1']); say(m.x, m.base - 80 * S, 'Así se mueve una web con buen tráfico', 2.4); return; }
     if (shootHit(x, y)) {
@@ -747,9 +757,14 @@
         if (Q.t > 3.2) { Q.state = 'up'; Q.t = 0; }
       } else if (Q.state === 'up') {
         Q.t += dt; Q.tumble = Math.max(0, 1 - Q.t / .5);
-        if (Q.t > .6) { Q.state = 'walk'; say(Q.x, groundY(Q.x) - 48 * S, 'Ahora toca subir el SEO', 2.2); }
+        if (Q.t > .6) { Q.state = 'walk'; say(Q.x, groundY(Q.x) - 48 * S, 'Si no es por tierra, será por el aire, Sancho', 2.8); }
+      } else if (Q.state === 'fly') {
+        Q.t += dt; Q.phase += dt * 12; Q.tilt = Math.min(.45, Q.t * .6);
+        Q.lift += (30 + 170 * Q.t) * k2 * dt; Q.x += Q.dir * (30 + 90 * Q.t) * k2 * dt;
+        if (Math.random() < .8) CV.sparks.push({ x: Q.x - Q.dir * 42 * k2, y: groundY(Q.x) - Q.lift - 8 * k2, vx: -Q.dir * rnd(20, 70), vy: rnd(10, 60), life: 0, max: rnd(.4, 1) });
+        if (Q.lift > surf + 60 || Q.x < -120 || Q.x > W + 120) { Q.on = false; Q.next = rnd(25, 40); }
       }
-      if (Q.x < crest.x - crest.w * 1.15 || Q.x < -60) { Q.on = false; Q.next = rnd(25, 40); }
+      if (Q.on && Q.state !== 'fly' && (Q.x < crest.x - crest.w * 1.15 || Q.x < -60)) { Q.on = false; Q.next = rnd(25, 40); }
     }
     // Clavileño cruza el cielo cada cierto tiempo
     if (!CV.on) { CV.next -= dt; if (CV.next <= 0 && !reduce) spawnClavileno(); }
@@ -805,7 +820,7 @@
   function drawQuijote(ctx) {
     if (!Q.on) return;
     const k = S * 1.1, gy = groundY(Q.x), col = rgba(env.silh);
-    ctx.save(); ctx.translate(Q.x, gy); ctx.scale(Q.dir, 1);
+    ctx.save(); ctx.translate(Q.x, gy - (Q.lift || 0)); ctx.scale(Q.dir, 1); if (Q.tilt) ctx.rotate(-Q.tilt);
     ctx.fillStyle = col; ctx.strokeStyle = col; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     const bob = Q.state === 'charge' ? Math.abs(Math.sin(Q.phase)) * 1.5 * k : Math.abs(Math.sin(Q.phase)) * .6 * k;
 
@@ -1052,8 +1067,7 @@
       };
       if (!found.has('agua') && vents[1]) hot(vents[1].x, surfAt(vents[1].x) + 24, 0);
       if (!found.has('molino') && mills.length) { const m = mills[(mills.length - 1) >> 1]; hot(m.x, m.base - 39 * S, .25); }
-      if (!found.has('quijote') && Q.on && Q.state === 'walk') { const k3 = S * 1.1; hot(Q.x, groundY(Q.x) - 46 * k3, .5); }
-      if (!found.has('clavileno') && CV.on) hot(CV.x, CV.y - 24 * S, .6);
+      if ((!found.has('quijote') || !found.has('clavileno')) && Q.on && Q.state === 'walk') { const k3 = S * 1.1; hot(Q.x, groundY(Q.x) - 46 * k3, .5); }
       if (!found.has('castillo') && castle.top) hot(castle.top.x, castle.top.y - 6, .75);
       const d = sunDisc || moonPos;
       if (!found.has('cielo') && d) hot(d.x + d.r * .9, d.y - d.r * .9, .4);
