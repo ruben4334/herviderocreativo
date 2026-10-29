@@ -37,7 +37,8 @@
   *{box-sizing:border-box}
   html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);overflow:hidden;
     font-family:'Instrument Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-    -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+    -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;
+    -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   #back{z-index:1;cursor:pointer;touch-action:none}
   #front{z-index:3;pointer-events:none}
@@ -612,8 +613,11 @@
     back.style.cursor = (clavHit(X, Y) || quijoteHit(X, Y) || millHit(X, Y) || shootHit(X, Y) || castleHit(X, Y) || skyHit(X, Y)) ? 'help' : 'pointer';
   });
   back.addEventListener('pointerleave', () => ptr.on = false);
+  back.addEventListener('contextmenu', e => e.preventDefault());
+  back.addEventListener('dragstart', e => e.preventDefault());
   back.addEventListener('pointerup', () => { if (touch) ptr.on = false; });
   back.addEventListener('pointerdown', e => {
+    e.preventDefault();
     setPtr(e);
     const x = e.clientX, y = e.clientY;
     if (clavHit(x, y)) { launchClavileno(); return; }
@@ -655,8 +659,9 @@
 
     if (ptr.on && ptr.y > surfAt(ptr.x) - 40) {
       const sp = Math.hypot(ptr.x - ptr.px, ptr.y - ptr.py);
-      if (sp > .5) poke(ptr.x, -Math.min(3.5, sp * .08));
-      if (ptr.y > surfAt(ptr.x) && Math.random() < .25) addBubble(ptr.x + rnd(-6, 6), ptr.y, rnd(1, 2.5));
+      const near = Math.abs(ptr.y - surfAt(ptr.x)) < 45;
+      if (sp > .5 && near) poke(ptr.x, -Math.min(1.6, sp * .05));
+      if (sp > 1.5 && ptr.y > surfAt(ptr.x) && Math.random() < .35) addBubble(ptr.x + rnd(-6, 6), ptr.y, rnd(1, 2.5));
     }
     ptr.px = ptr.x; ptr.py = ptr.y;
 
@@ -705,7 +710,7 @@
     for (let i = speech.length - 1; i >= 0; i--) { speech[i].life += dt; if (speech[i].life > speech[i].max) speech.splice(i, 1); }
 
     leafT -= dt;
-    if (leafT <= 0 && leaves.length < 6 && !reduce) {
+    if (false) {
       leafT = rnd(2.5, 5.5);
       leaves.push({ x: rnd(W * .1, W * .95), y: -20, vy: rnd(28, 46), ph: rnd(0, 6.28), rot: rnd(0, 6.28), rs: rnd(-2, 2),
         s: rnd(6, 10), hue: Math.random() < .5 ? rnd(0, 14) : rnd(30, 46), st: 0, t: 0 });
