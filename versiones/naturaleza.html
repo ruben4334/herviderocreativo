@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Hervidero Creativo</title>
+<meta name="description" content="Hervidero Creativo. Las ideas ya brotan de la tierra. Muy pronto, nuestra web.">
+<meta property="og:title" content="Hervidero Creativo">
+<meta property="og:description" content="Las ideas ya brotan de la tierra. Muy pronto, nuestra web.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#081419">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%231d5e66'/%3E%3Cpath d='M8 40c8-4 16 4 24 0s16-4 24 0v12H8z' fill='%2340b4a6'/%3E%3Ccircle cx='26' cy='28' r='5' fill='none' stroke='%23f4efe3' stroke-width='3.5'/%3E%3Ccircle cx='38' cy='18' r='3.5' fill='none' stroke='%23f4efe3' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&family=Instrument+Sans:wght@400;500&display=swap" rel="stylesheet">
+<script>document.documentElement.classList.add('js')</script>
+<style>
+  :root{
+    --bg:#081419;
+    --ink:#f4efe3;
+    --muted:rgba(240,234,220,.68);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);overflow:hidden;
+    font-family:'Instrument Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+  canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+  #back{z-index:1;cursor:pointer;touch-action:none}
+  #front{z-index:3;pointer-events:none}
+
+  .stage{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;align-items:center;
+    padding:clamp(36px,9vh,104px) 16px 0;text-align:center;pointer-events:none}
+  .kicker{margin:0;letter-spacing:.34em;text-transform:uppercase;font-size:12px;font-weight:500;color:var(--muted)}
+  h1{margin:.3em 0 .1em;line-height:.9;font-family:'Fraunces',Georgia,serif;font-weight:400}
+  h1 .row{display:block;white-space:nowrap}
+  h1 .r1{font-variation-settings:'opsz' 144;font-weight:500;letter-spacing:-.035em;
+    font-size:clamp(54px,13vw,168px);text-shadow:0 4px 30px rgba(0,0,0,.35)}
+  h1 .r2{font-style:italic;font-variation-settings:'opsz' 144;font-weight:400;letter-spacing:-.02em;
+    font-size:clamp(44px,10.5vw,138px);text-shadow:0 0 36px rgba(64,180,166,.28)}
+  h1 .ch{display:inline-block;will-change:transform,opacity}
+  .tag{margin:.7em 0 0;font-size:clamp(16px,2vw,20px);line-height:1.5;color:var(--muted);max-width:32ch;
+    text-shadow:0 1px 12px rgba(0,0,0,.6)}
+
+  .foot{position:fixed;left:0;right:0;bottom:max(18px,env(safe-area-inset-bottom));z-index:4;
+    display:flex;flex-direction:column;align-items:center;gap:12px;padding:0 16px;pointer-events:none}
+  .cta{pointer-events:auto;color:var(--ink);text-decoration:none;font-size:14px;font-weight:500;letter-spacing:.02em;
+    border:1px solid rgba(244,239,227,.3);padding:11px 22px;border-radius:999px;
+    background:rgba(8,20,25,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    transition:background .25s,border-color .25s,transform .25s}
+  .cta:hover,.cta:focus-visible{background:rgba(64,180,166,.85);color:#06181a;border-color:transparent;transform:translateY(-2px);outline:none}
+  .small{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(240,234,220,.55);text-shadow:0 1px 8px rgba(0,0,0,.8)}
+  .hint{position:fixed;z-index:4;left:50%;transform:translateX(-50%);font-size:12px;letter-spacing:.2em;
+    text-transform:uppercase;color:rgba(244,239,227,.78);text-shadow:0 1px 10px rgba(0,0,0,.9);pointer-events:none;white-space:nowrap}
+
+  .js .fade{opacity:0;transition:opacity 1.4s ease}
+  .js .fade.on{opacity:1}
+  .js h1 .ch{opacity:0}
+  @media (prefers-reduced-motion:reduce){ .js .fade{transition:none} }
+</style>
+</head>
+<body>
+  <canvas id="back" aria-hidden="true"></canvas>
+
+  <main class="stage">
+    <p class="kicker fade" data-d="300">Brota algo nuevo</p>
+    <h1 aria-label="Hervidero Creativo">
+      <span class="row r1" aria-hidden="true">Hervidero</span>
+      <span class="row r2" aria-hidden="true">Creativo</span>
+    </h1>
+    <p class="tag fade" data-d="2200">Las ideas ya brotan de la tierra.<br>Muy pronto, nuestra web.</p>
+  </main>
+
+  <div class="hint fade" id="hint" data-d="4400">Haz clic en el agua</div>
+
+  <footer class="foot">
+    <a class="cta fade" data-d="2700" href="mailto:super@herviderocreativo.com">Escríbenos</a>
+    <span class="small fade" data-d="3100">© 2026 Hervidero Creativo</span>
+  </footer>
+
+  <canvas id="front" aria-hidden="true"></canvas>
+
+<script>
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const touch = matchMedia('(hover: none)').matches;
+  const back = document.getElementById('back'), bx = back.getContext('2d');
+  const front = document.getElementById('front'), fx = front.getContext('2d');
+  const bgC = document.createElement('canvas'), bg = bgC.getContext('2d');
+  const tag = document.querySelector('.tag');
+  const hint = document.getElementById('hint');
+  if (touch) hint.textContent = 'Toca el agua';
+
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  function seeded(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  const SEED = (Math.random() * 1e9) | 0;
+  const oct = (fs, as) => fs.map((f, i) => ({ f, a: as[i], p: Math.random() * 6.28 }));
+  const NZ = {
+    far:  oct([.0026, .0061, .015], [1, .45, .18]),
+    near: oct([.0042, .011, .027], [1, .4, .15]),
+    bed:  oct([.006, .017], [1, .4]),
+  };
+  const noise = (o, x) => o.reduce((s, k) => s + Math.sin(x * k.f + k.p) * k.a, 0);
+
+  /* ---------- Letras ---------- */
+  const chars = [];
+  document.querySelectorAll('h1 .row').forEach((row, ri) => {
+    const txt = row.textContent; row.textContent = '';
+    [...txt].forEach((ch, i) => {
+      const s = document.createElement('span');
+      s.className = 'ch'; s.textContent = ch;
+      if (ri === 1) { const k = i / Math.max(1, txt.length - 1);
+        s.style.color = `hsl(${174 - k * 82},${52 + k * 8}%,${58 + k * 6}%)`; }
+      row.appendChild(s); chars.push(s);
+    });
+  });
+  document.querySelectorAll('.fade').forEach(el => setTimeout(() => el.classList.add('on'), reduce ? 0 : +el.dataset.d || 0));
+  let hintGone = false;
+  const killHint = () => { if (!hintGone) { hintGone = true; hint.classList.remove('on'); } };
+
+  /* ---------- Sprites ---------- */
+  function radial(stops) {
+    const c = document.createElement('canvas'); c.width = c.height = 128;
+    const s = c.getContext('2d'), g = s.createRadialGradient(64, 64, 0, 64, 64, 64);
+    stops.forEach(([o, col]) => g.addColorStop(o, col)); s.fillStyle = g; s.fillRect(0, 0, 128, 128); return c;
+  }
+  const mist = radial([[0, 'rgba(240,244,240,1)'], [.5, 'rgba(240,244,240,.35)'], [1, 'rgba(240,244,240,0)']]);
+  const glow = radial([[0, 'rgba(255,250,200,1)'], [.18, 'rgba(225,245,140,.8)'], [.5, 'rgba(190,230,90,.18)'], [1, 'rgba(190,230,90,0)']]);
+
+  /* ---------- Estado ---------- */
+  let W = 0, H = 0, DPR = 1, surf = 0, step = 8, N = 0, hgt, vel;
+  let vents = [], pebbles = [], reeds = [], flies = [], beams = [];
+  const bubbles = [], drops = [], grains = [], steam = [], leaves = [];
+  let T = 0, boil = 0, burst = 0, sAcc = 0, seepAcc = 0, leafT = 1.5;
+  const ptr = { x: -1, y: -1, px: -1, py: -1, on: false };
+
+  const bedAt = x => surf + (H - surf) * .8 + noise(NZ.bed, x) * (H - surf) * .05;
+
+  function resize() {
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = innerWidth; H = innerHeight;
+    for (const [c, x] of [[back, bx], [front, fx]]) {
+      c.width = Math.round(W * DPR); c.height = Math.round(H * DPR); x.setTransform(DPR, 0, 0, DPR, 0, 0);
+    }
+    const tb = tag.getBoundingClientRect().bottom;
+    surf = Math.round(Math.min(H * .78, Math.max(H * .56, tb + 64)));
+    step = W < 700 ? 6 : 8; N = Math.ceil(W / step) + 2;
+    hgt = new Float32Array(N); vel = new Float32Array(N);
+    const R = seeded(SEED), sm = W < 700;
+
+    const nv = sm ? 3 : 5;
+    vents = Array.from({ length: nv }, (_, i) => ({
+      x: (i + .5 + (R() - .5) * .5) / nv * W, sp: .6 + R() * .9, ph: R() * 6.28, acc: 0, gacc: 0 }));
+    pebbles = Array.from({ length: Math.round(W / 22) }, () => {
+      const x = R() * W, r = 2 + R() * 6; return { x, y: bedAt(x) + 3 + R() * 22, rx: r, ry: r * (.5 + R() * .2), l: 18 + R() * 16 }; });
+    reeds = [];
+    const nr = sm ? 6 : 13;
+    for (const side of [0, 1]) for (let i = 0; i < nr; i++) {
+      const x = side ? W - R() * W * .1 + 6 : R() * W * .1 - 6;
+      reeds.push({ x, top: surf - (25 + R() * (sm ? 80 : 130)), w: 2.5 + R() * 3.5, lean: (side ? -1 : 1) * (4 + R() * 26),
+        ph: R() * 6.28, sp: .7 + R() * .6, tail: R() < .35, shade: R() });
+    }
+    flies = Array.from({ length: sm ? 9 : 16 }, () => ({ x: R() * W, y: surf - 10 - R() * H * .22, vx: 0, vy: 0, ph: R() * 6.28 }));
+    beams = Array.from({ length: sm ? 2 : 4 }, () => ({ x: R() * W, w: 40 + R() * 90, sk: 60 + R() * 120, ph: R() * 6.28 }));
+    buildBg(R);
+    hint.style.top = Math.min(H - 120, surf + (H - surf) * .42) + 'px';
+  }
+
+  /* Paisaje estático: cielo de amanecer, montañas, pinar */
+  function buildBg(R) {
+    bgC.width = Math.round(W * DPR); bgC.height = Math.round((surf + 2) * DPR);
+    bg.setTransform(DPR, 0, 0, DPR, 0, 0);
+    const sky = bg.createLinearGradient(0, 0, 0, surf);
+    sky.addColorStop(0, '#071318'); sky.addColorStop(.45, '#0e2830'); sky.addColorStop(.78, '#3a4d4c'); sky.addColorStop(1, '#d39b72');
+    bg.fillStyle = sky; bg.fillRect(0, 0, W, surf + 2);
+    for (let i = 0; i < 90; i++) {
+      const y = R() * surf * .55; bg.globalAlpha = (.15 + R() * .5) * (1 - y / (surf * .55));
+      bg.fillStyle = '#fff'; bg.fillRect(R() * W, y, R() < .1 ? 1.6 : 1, R() < .1 ? 1.6 : 1);
+    }
+    bg.globalAlpha = 1;
+    const sx = W * .7, sun = bg.createRadialGradient(sx, surf, 0, sx, surf, Math.max(W, H) * .55);
+    sun.addColorStop(0, 'rgba(255,196,140,.55)'); sun.addColorStop(.35, 'rgba(240,150,110,.14)'); sun.addColorStop(1, 'rgba(240,150,110,0)');
+    bg.fillStyle = sun; bg.fillRect(0, 0, W, surf + 2);
+
+    const ridge = (o, base, amp, col) => {
+      bg.beginPath(); bg.moveTo(0, surf + 2);
+      for (let x = 0; x <= W + 6; x += 6) bg.lineTo(x, surf - base - noise(o, x) * amp);
+      bg.lineTo(W, surf + 2); bg.closePath(); bg.fillStyle = col; bg.fill();
+    };
+    ridge(NZ.far, H * .12, H * .04, 'rgba(70,98,100,.62)');
+    const haze = bg.createLinearGradient(0, surf - H * .12, 0, surf);
+    haze.addColorStop(0, 'rgba(211,155,114,0)'); haze.addColorStop(1, 'rgba(211,155,114,.22)');
+    bg.fillStyle = haze; bg.fillRect(0, surf - H * .2, W, H * .2 + 2);
+    ridge(NZ.near, H * .065, H * .025, '#1e3a3e');
+
+    const scale = clamp(H / 900, .7, 1.2);
+    bg.fillStyle = '#0b1b1e';
+    bg.fillRect(0, surf - 3, W, 5);
+    for (let x = -10; x < W + 10; x += 5 + R() * 10) {
+      const h = (12 + R() * 30) * scale * (.65 + .35 * (noise(NZ.near, x * 3) * .5 + .5));
+      const w = h * (.34 + R() * .1), b = surf - 1;
+      bg.beginPath();
+      bg.moveTo(x, b - h); bg.lineTo(x - w * .38, b - h * .45); bg.lineTo(x + w * .38, b - h * .45); bg.closePath();
+      bg.moveTo(x, b - h * .7); bg.lineTo(x - w * .5, b); bg.lineTo(x + w * .5, b); bg.closePath();
+      bg.fill();
+    }
+  }
+
+  addEventListener('resize', resize);
+  resize();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(resize);
+
+  /* ---------- Superficie ---------- */
+  const amb = x => { const a = 1 + 2.2 * boil; return Math.sin(x * .011 + T * 1.1) * a * .6 + Math.sin(x * .027 - T * 1.7) * a * .4; };
+  const idx = x => clamp(Math.round(x / step), 0, N - 1);
+  const surfAt = x => surf + hgt[idx(x)] + amb(x);
+  function poke(x, f) { const i = idx(x); for (let k = -2; k <= 2; k++) { const j = i + k; if (j >= 0 && j < N) vel[j] += f * (1 - Math.abs(k) * .3); } }
+  function waterStep() {
+    for (let i = 0; i < N; i++) { vel[i] += -.025 * hgt[i] - .045 * vel[i]; hgt[i] += vel[i]; }
+    for (let p = 0; p < 3; p++) for (let i = 1; i < N - 1; i++) vel[i] += .1 * (hgt[i - 1] + hgt[i + 1] - 2 * hgt[i]);
+  }
+
+  /* ---------- Partículas ---------- */
+  function addBubble(x, y, r) { if (bubbles.length < 400) bubbles.push({ x, y, r, vy: -rnd(8, 30), ph: rnd(0, 6.28), w: rnd(.5, 2) }); }
+  function addSteam(x, y, big) {
+    if (steam.length < 200) steam.push({ x, y, vx: rnd(4, 16), vy: -rnd(10, 26), life: 0, max: rnd(4, 8), size: rnd(40, 80) * (big ? 1.5 : 1), seed: rnd(0, 6.28) });
+  }
+  function pop(b, sy) {
+    poke(b.x, -b.r * .55);
+    if (b.r > 3.6) for (let i = 0, n = Math.min(5, b.r / 2 | 0); i < n && drops.length < 240; i++)
+      drops.push({ x: b.x, y: sy - 2, vx: rnd(-50, 50), vy: -rnd(70, 170) * (b.r / 7), r: rnd(.8, 1.8) });
+    if (Math.random() < .2 + boil * .2) addSteam(b.x, sy, b.r > 5);
+  }
+  function geyser(x) {
+    const sy = surfAt(x);
+    for (let i = 0; i < 60 && drops.length < 320; i++)
+      drops.push({ x: x + rnd(-5, 5), y: sy - 2, vx: rnd(-55, 55), vy: -rnd(200, 520), r: rnd(1, 2.8) });
+    poke(x, -16);
+    const by = bedAt(x);
+    for (let i = 0; i < 24; i++) addBubble(x + rnd(-30, 30), by - rnd(0, 10), rnd(1.5, 5.5));
+    for (let i = 0; i < 8; i++) grains.push({ x: x + rnd(-10, 10), y: by, vx: rnd(-40, 40), vy: -rnd(40, 110) });
+    for (let i = 0; i < 6; i++) addSteam(x + rnd(-30, 30), sy - rnd(0, 40), true);
+    burst = Math.min(1.4, burst + .8);
+  }
+
+  /* ---------- Interacción ---------- */
+  function setPtr(e) { ptr.px = ptr.on ? ptr.x : e.clientX; ptr.py = ptr.on ? ptr.y : e.clientY; ptr.x = e.clientX; ptr.y = e.clientY; ptr.on = true; }
+  back.addEventListener('pointermove', setPtr);
+  back.addEventListener('pointerleave', () => ptr.on = false);
+  back.addEventListener('pointerup', () => { if (touch) ptr.on = false; });
+  back.addEventListener('pointerdown', e => { setPtr(e); killHint(); geyser(e.clientX); });
+
+  /* ---------- Bucle ---------- */
+  const start = performance.now(); let last = start, simAcc = 0;
+  function frame(now) {
+    const dt = Math.min(.05, (now - last) / 1000); last = now; T += dt;
+    const t = (now - start) / 1000;
+    const ramp = reduce ? .5 : Math.min(1, t / 2.8);
+    burst *= Math.pow(.3, dt);
+    boil = ramp * ramp * (3 - 2 * ramp) * (.9 + .1 * Math.sin(T * .4)) + burst * .6;
+    const k = reduce ? .35 : 1;
+
+    simAcc += dt; while (simAcc >= 1 / 60) { waterStep(); simAcc -= 1 / 60; }
+
+    // dedo en el agua: ondas al moverse cerca o bajo la superficie
+    if (ptr.on && ptr.y > surfAt(ptr.x) - 40) {
+      const sp = Math.hypot(ptr.x - ptr.px, ptr.y - ptr.py);
+      if (sp > .5) poke(ptr.x, -Math.min(3.5, sp * .08));
+      if (ptr.y > surfAt(ptr.x) && Math.random() < .25) addBubble(ptr.x + rnd(-6, 6), ptr.y, rnd(1, 2.5));
+    }
+    ptr.px = ptr.x; ptr.py = ptr.y;
+
+    // manantiales: borbotones rítmicos desde la arena
+    for (const v of vents) {
+      const pulse = Math.pow(.5 + .5 * Math.sin(T * v.sp + v.ph), 3);
+      v.p = pulse;
+      v.acc += (6 + pulse * 46 + burst * 30) * boil * k * dt;
+      const by = bedAt(v.x);
+      while (v.acc >= 1) { v.acc--; addBubble(v.x + rnd(-9, 9), by - 2, rnd(1, 2 + 3.4 * pulse)); }
+      v.gacc += pulse * 10 * boil * k * dt;
+      while (v.gacc >= 1) { v.gacc--; if (grains.length < 220) grains.push({ x: v.x + rnd(-5, 5), y: by - 1, vx: rnd(-30, 30), vy: -rnd(20, 70) * (.5 + pulse) }); }
+    }
+    seepAcc += 14 * boil * k * (W / 1200) * dt;
+    while (seepAcc >= 1) { seepAcc--; const x = rnd(0, W); addBubble(x, bedAt(x) - 2, rnd(.8, 1.8)); }
+    sAcc += (3 + boil * 9) * (W / 1200) * k * dt;
+    while (sAcc >= 1) { sAcc--; const x = Math.random() < .5 ? vents[(Math.random() * vents.length) | 0].x + rnd(-60, 60) : rnd(0, W); addSteam(x, surfAt(x)); }
+
+    for (let i = bubbles.length - 1; i >= 0; i--) {
+      const b = bubbles[i];
+      b.vy -= (24 + b.r * 13) * dt; b.vy *= .985; b.y += b.vy * dt;
+      b.x += Math.sin(T * 3 * b.w + b.ph) * b.r * .1;
+      b.r = Math.min(b.r * (1 + .12 * dt), 9);
+      const sy = surfAt(b.x);
+      if (b.y - b.r * .3 <= sy) { pop(b, sy); bubbles.splice(i, 1); }
+    }
+    for (let i = drops.length - 1; i >= 0; i--) {
+      const d = drops[i]; d.vy += 650 * dt; d.x += d.vx * dt; d.y += d.vy * dt;
+      if (d.vy > 0 && d.y > surfAt(d.x)) { poke(d.x, 1.1 * d.r); drops.splice(i, 1); }
+    }
+    for (let i = grains.length - 1; i >= 0; i--) {
+      const g = grains[i]; g.vy += 140 * dt; g.vx *= .97; g.x += g.vx * dt; g.y += g.vy * dt;
+      if (g.vy > 0 && g.y >= bedAt(g.x)) grains.splice(i, 1);
+    }
+    for (let i = steam.length - 1; i >= 0; i--) {
+      const s = steam[i]; s.life += dt;
+      s.x += (s.vx + Math.sin(T * .5 + s.seed) * 6) * dt; s.y += s.vy * dt; s.vy *= (1 - .1 * dt); s.size += 22 * dt;
+      if (s.life > s.max) steam.splice(i, 1);
+    }
+    // hojas de otoño que caen y flotan
+    leafT -= dt;
+    if (leafT <= 0 && leaves.length < 6 && !reduce) {
+      leafT = rnd(2.5, 5.5);
+      leaves.push({ x: rnd(W * .05, W * .9), y: -20, vy: rnd(28, 46), ph: rnd(0, 6.28), rot: rnd(0, 6.28), rs: rnd(-2, 2),
+        s: rnd(6, 10), hue: rnd(18, 44), st: 0, t: 0 });
+    }
+    for (let i = leaves.length - 1; i >= 0; i--) {
+      const l = leaves[i];
+      if (!l.st) {
+        l.y += l.vy * dt; l.x += (Math.sin(T * 1.4 + l.ph) * 34 + 8) * dt; l.rot += l.rs * dt;
+        if (l.y >= surfAt(l.x) - 1) { l.st = 1; poke(l.x, 3); }
+      } else {
+        l.t += dt; l.x += 9 * dt; l.y = surfAt(l.x) - 1; l.rot += Math.sin(T + l.ph) * .2 * dt;
+        if (l.t > 12 || l.x > W + 30) leaves.splice(i, 1);
+      }
+    }
+    for (const f of flies) {
+      f.vx = clamp(f.vx + rnd(-1, 1) * 40 * dt, -18, 18); f.vy = clamp(f.vy + rnd(-1, 1) * 30 * dt, -12, 12);
+      f.x += f.vx * dt; f.y += f.vy * dt;
+      if (f.x < 0) f.x += W; if (f.x > W) f.x -= W;
+      f.y = clamp(f.y, surf - H * .26, surf - 10);
+    }
+
+    draw();
+    letters(t);
+    requestAnimationFrame(frame);
+  }
+
+  function surfacePath(ctx, cont) {
+    ctx[cont ? 'lineTo' : 'moveTo'](0, surf + hgt[0] + amb(0));
+    for (let i = 1; i < N; i++) { const x = i * step; ctx.lineTo(x, surf + hgt[i] + amb(x)); }
+  }
+
+  function draw() {
+    const x = bx;
+    x.drawImage(bgC, 0, 0, W, surf + 2);
+
+    // agua (recortada a la superficie)
+    x.save();
+    x.beginPath(); x.moveTo(0, H); surfacePath(x, true); x.lineTo(W, H); x.closePath(); x.clip();
+    const wg = x.createLinearGradient(0, surf, 0, H);
+    wg.addColorStop(0, '#2f8c88'); wg.addColorStop(.22, '#1b5c63'); wg.addColorStop(1, '#0a2830');
+    x.fillStyle = wg; x.fillRect(0, surf - 20, W, H - surf + 20);
+
+    // reflejo del paisaje, ondulado
+    const refH = Math.min(H - surf, surf * .55), DH = 3;
+    for (let y = 0; y < refH; y += DH) {
+      const src = surf - y - DH; if (src < 0) break;
+      x.globalAlpha = .5 * (1 - y / refH);
+      const off = Math.sin(y * .11 - T * 1.8) * (1 + y * .035) * (1 + boil * .6);
+      x.drawImage(bgC, 0, src * DPR, bgC.width, DH * DPR, off, surf + y, W, DH);
+    }
+    x.globalAlpha = 1;
+
+    // rayos de luz bajo el agua
+    x.globalCompositeOperation = 'lighter';
+    for (const b of beams) {
+      const a = .035 + .02 * Math.sin(T * .6 + b.ph), bx0 = b.x + Math.sin(T * .2 + b.ph) * 30;
+      const g = x.createLinearGradient(0, surf, 0, H); g.addColorStop(0, `rgba(200,255,235,${a})`); g.addColorStop(1, 'rgba(200,255,235,0)');
+      x.fillStyle = g; x.beginPath();
+      x.moveTo(bx0, surf); x.lineTo(bx0 + b.w, surf); x.lineTo(bx0 + b.w * 1.8 + b.sk, H); x.lineTo(bx0 + b.sk, H); x.closePath(); x.fill();
+    }
+    // brillo cálido de cada manantial
+    for (const v of vents) {
+      const by = bedAt(v.x), r = 70 + 50 * (v.p || 0);
+      const g = x.createRadialGradient(v.x, by, 0, v.x, by, r);
+      g.addColorStop(0, `rgba(120,230,200,${.1 + .12 * (v.p || 0) * boil})`); g.addColorStop(1, 'rgba(120,230,200,0)');
+      x.fillStyle = g; x.fillRect(v.x - r, by - r, r * 2, r * 2);
+    }
+    x.globalCompositeOperation = 'source-over';
+
+    // lecho de arena y piedras
+    x.beginPath(); x.moveTo(0, H);
+    for (let px = 0; px <= W + 8; px += 8) x.lineTo(px, bedAt(px));
+    x.lineTo(W, H); x.closePath();
+    const sg = x.createLinearGradient(0, surf + (H - surf) * .72, 0, H);
+    sg.addColorStop(0, '#6d5c3f'); sg.addColorStop(1, '#251d15');
+    x.fillStyle = sg; x.fill();
+    for (const p of pebbles) {
+      x.beginPath(); x.ellipse(p.x, p.y, p.rx, p.ry, 0, 0, 6.2832);
+      x.fillStyle = `hsl(32,14%,${p.l}%)`; x.fill();
+    }
+    for (const v of vents) {
+      const by = bedAt(v.x), w = 12 + 6 * (v.p || 0);
+      x.beginPath(); x.ellipse(v.x, by + 1, w, 3.5, 0, 0, 6.2832); x.fillStyle = 'rgba(25,18,12,.75)'; x.fill();
+      x.beginPath(); x.ellipse(v.x, by - 1, w + 4, 4.5, 0, Math.PI, 0); x.strokeStyle = 'rgba(190,160,110,.45)'; x.lineWidth = 1.5; x.stroke();
+    }
+    x.fillStyle = 'rgba(205,175,120,.85)';
+    for (const g of grains) x.fillRect(g.x, g.y, 1.6, 1.6);
+
+    // burbujas
+    x.lineWidth = 1;
+    for (const b of bubbles) {
+      x.beginPath(); x.arc(b.x, b.y, b.r, 0, 6.2832);
+      x.fillStyle = 'rgba(220,255,245,.07)'; x.fill();
+      x.strokeStyle = 'rgba(225,255,248,.55)'; x.stroke();
+      if (b.r > 2.4) { x.beginPath(); x.arc(b.x - b.r * .35, b.y - b.r * .38, b.r * .22, 0, 6.2832); x.fillStyle = 'rgba(255,255,255,.75)'; x.fill(); }
+    }
+    x.restore();
+
+    // línea de superficie
+    x.beginPath(); surfacePath(x);
+    x.strokeStyle = 'rgba(255,215,170,.14)'; x.lineWidth = 7; x.stroke();
+    x.strokeStyle = 'rgba(240,250,240,.55)'; x.lineWidth = 1.3; x.stroke();
+
+    // gotas
+    x.fillStyle = 'rgba(215,245,240,.9)';
+    for (const d of drops) { x.beginPath(); x.arc(d.x, d.y, d.r, 0, 6.2832); x.fill(); }
+
+    // hojas
+    for (const l of leaves) {
+      const a = l.st ? clamp((12 - l.t) / 3, 0, 1) : 1;
+      x.save(); x.translate(l.x, l.y); x.rotate(l.rot); x.globalAlpha = a;
+      x.beginPath(); x.ellipse(0, 0, l.s, l.s * .45, 0, 0, 6.2832);
+      x.fillStyle = `hsl(${l.hue},72%,46%)`; x.fill();
+      x.beginPath(); x.moveTo(-l.s, 0); x.lineTo(l.s * 1.3, 0); x.strokeStyle = `hsla(${l.hue},60%,28%,.8)`; x.lineWidth = .8; x.stroke();
+      x.restore();
+    }
+    x.globalAlpha = 1;
+
+    // luciérnagas
+    x.globalCompositeOperation = 'lighter';
+    for (const f of flies) {
+      const a = Math.pow(.5 + .5 * Math.sin(T * 1.7 + f.ph), 3) * Math.min(1, T / 4);
+      if (a < .02) continue;
+      x.globalAlpha = a; x.drawImage(glow, f.x - 11, f.y - 11, 22, 22);
+    }
+    x.globalAlpha = 1; x.globalCompositeOperation = 'source-over';
+
+    // juncos en primer plano
+    for (const r of reeds) {
+      const sw = Math.sin(T * r.sp + r.ph) * 6 + Math.sin(T * .37 + r.ph) * 3;
+      const tx = r.x + r.lean + sw, ty = r.top, cx = r.x + r.lean * .4;
+      x.beginPath();
+      x.moveTo(r.x - r.w, H + 4);
+      x.quadraticCurveTo(cx - r.w * .6, (ty + H) / 2, tx, ty);
+      x.quadraticCurveTo(cx + r.w * .6, (ty + H) / 2, r.x + r.w, H + 4);
+      x.closePath();
+      x.fillStyle = r.shade > .5 ? '#06110e' : '#0b1b16'; x.fill();
+      if (r.tail) {
+        x.save(); x.translate(tx - (r.lean + sw) * .04, ty + 16); x.rotate(Math.atan((r.lean + sw) / (H - ty)) * 1.4);
+        x.beginPath(); x.ellipse(0, 0, 3.2, 11, 0, 0, 6.2832); x.fillStyle = '#2a170e'; x.fill(); x.restore();
+      }
+    }
+
+    // neblina (lienzo delantero, flota sobre todo)
+    fx.clearRect(0, 0, W, H);
+    for (const s of steam) {
+      const a = Math.sin(Math.PI * s.life / s.max) * (.05 + .06 * Math.min(1, boil));
+      if (a <= 0) continue;
+      fx.globalAlpha = a; fx.drawImage(mist, s.x - s.size / 2, s.y - s.size / 2, s.size, s.size);
+    }
+    fx.globalAlpha = 1;
+  }
+
+  function letters(t) {
+    for (let i = 0; i < chars.length; i++) {
+      const p = reduce ? 1 : clamp((t - .5 - i * .08) / 1.3, 0, 1);
+      const e = 1 - Math.pow(1 - p, 3);
+      const bob = reduce ? 0 : Math.sin(T * 1.3 + i * .5) * 2.2 * e;
+      const y = (1 - e) * 60 + bob;
+      const r = reduce ? 0 : Math.sin(T * 1.1 + i * .9) * .7 * e;
+      const st = chars[i].style;
+      st.transform = `translate3d(0,${y.toFixed(2)}px,0) rotate(${r.toFixed(2)}deg)`;
+      st.opacity = Math.min(1, p * 1.5).toFixed(3);
+      st.filter = p < 1 ? `blur(${((1 - e) * 10).toFixed(2)}px)` : 'none';
+    }
+  }
+
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
