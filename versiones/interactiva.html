@@ -216,8 +216,7 @@
   });
   function paintText() {
     document.documentElement.classList.toggle('day', env.light);
-    for (const { s, k } of creativo)
-      s.style.color = env.light ? `hsl(${30 - k * 24},88%,${44 - k * 6}%)` : `hsl(${44 - k * 32},${88 - k * 8}%,${62 - k * 4}%)`;
+    for (const { s } of creativo) s.style.color = '';   // mismo color que 'Hervidero', sin degradado
     document.querySelector('meta[name=theme-color]').content = rgba(env.sky[0]).replace(/rgba\((\d+),(\d+),(\d+).*/, (m, r, g, b) => '#' + [r, g, b].map(v => (+v).toString(16).padStart(2, '0')).join(''));
   }
   paintText();
