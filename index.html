@@ -61,6 +61,7 @@
     text-shadow:0 1px 10px var(--shade);display:flex;align-items:center;gap:.8em}
   .value{margin:.75em 0 0;font-size:13px;line-height:1.45;color:var(--muted);max-width:64ch;text-shadow:0 1px 10px var(--shade),0 0 4px var(--shade),0 0 2px var(--shade)}
   @media (max-width:420px){.value{font-size:12px;max-width:32ch}}
+  .when{margin-top:.35em;font-weight:500}
   .dots{display:inline-flex;gap:5px}
   .dots i{width:7px;height:7px;border-radius:50%;border:1px solid var(--accent);transition:background .4s,transform .4s}
   .dots i.on{background:var(--accent);transform:scale(1.15)}
@@ -103,6 +104,7 @@
     <p class="tip fade" data-d="2200" aria-live="polite"><span id="tipText"></span></p>
     <p class="count fade" data-d="2700" id="count"><span class="dots" id="dots"></span><span id="countText"></span></p>
     <p class="value fade" data-d="3300" id="value">En Hervidero Creativo buscamos y explotamos la curiosidad de tus potenciales clientes.</p>
+    <p class="value when fade" data-d="3700" id="when"></p>
   </main>
 
 
@@ -122,7 +124,7 @@
   const front = document.getElementById('front'), fx = front.getContext('2d');
   const bgC = document.createElement('canvas'), bg = bgC.getContext('2d');   // paisaje fijo
   const scC = document.createElement('canvas'), sc = scC.getContext('2d');   // paisaje + aspas + personajes (se refleja)
-  const anchor = document.getElementById('value');
+  const anchor = document.getElementById('when');
   const FONT = "'Instrument Sans',system-ui,sans-serif";
 
   const rnd = (a, b) => a + Math.random() * (b - a);
@@ -216,6 +218,8 @@
     });
   });
   function paintText() {
+    const w = document.getElementById('when');
+    if (w) w.textContent = env.sun.isDay ? 'Esta web cambia con la hora: pásate de noche y verás algo nuevo.' : 'Esta web cambia con la hora: pásate de día y verás algo nuevo.';
     document.documentElement.classList.toggle('day', env.light);
     for (const { s } of creativo) s.style.color = '';   // mismo color que 'Hervidero', sin degradado
     document.querySelector('meta[name=theme-color]').content = rgba(env.sky[0]).replace(/rgba\((\d+),(\d+),(\d+).*/, (m, r, g, b) => '#' + [r, g, b].map(v => (+v).toString(16).padStart(2, '0')).join(''));
