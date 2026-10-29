@@ -226,8 +226,9 @@
   /* ---------- Secretos y consejos ---------- */
   const SECRETS = ['agua', 'molino', 'quijote', 'castillo', 'cielo', 'clavileno'];
   const found = new Set();
+  // el bingo solo vive en memoria: al recargar o cerrar empieza de cero (y se borra lo que guardaron versiones anteriores)
   try { localStorage.removeItem('hv-secretos'); } catch (e) {}
-  try { JSON.parse(sessionStorage.getItem('hv-secretos') || '[]').forEach(x => SECRETS.includes(x) && found.add(x)); } catch (e) {}
+  try { sessionStorage.removeItem('hv-secretos'); } catch (e) {}
   const dotsEl = document.getElementById('dots'), countEl = document.getElementById('count'), countText = document.getElementById('countText');
   dotsEl.innerHTML = SECRETS.map(() => '<i></i>').join('');
   function renderCount() {
@@ -238,7 +239,6 @@
   function discover(id) {
     if (found.has(id)) return;
     found.add(id);
-    try { sessionStorage.setItem('hv-secretos', JSON.stringify([...found])); } catch (e) {}
     renderCount(); countEl.classList.remove('pulse'); void countEl.offsetWidth; countEl.classList.add('pulse');
     if (found.size === SECRETS.length) setTimeout(() => {
       say(W / 2, surf - 40, '¡Bingo! Los has encontrado todos. Escríbenos y seguimos jugando', 4.5);
