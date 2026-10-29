@@ -3,8 +3,8 @@
 Landing temporal de **herviderocreativo.com** mientras se construye la web definitiva.
 Se publica con GitHub Pages desde la rama `main` (carpeta raíz).
 
-- `index.html` — versión activa (Castilla-La Mancha).
-- `versiones/` — alternativas: `fuego.html`, `naturaleza.html`, `castilla-la-mancha.html`.
+- `index.html` — versión activa (interactiva: cambia con la hora y esconde 5 secretos). Para previsualizar otra hora: `?hora=21.5`.
+- `versiones/` — alternativas: `interactiva.html`, `fuego.html`, `naturaleza.html`, `castilla-la-mancha.html`.
   Para cambiar la portada, copia la que quieras encima de `index.html`.
 - `CNAME` — dominio propio para GitHub Pages.
 
