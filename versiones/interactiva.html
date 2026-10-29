@@ -523,10 +523,10 @@
     ctx.closePath(); ctx.fill();
   }
   function takeOff() {
-    if (Q.state !== 'walk') return;
+    if (Q.state !== 'prep' && Q.state !== 'walk') return;
     Q.state = 'fly'; Q.t = 0; Q.lift = 0; Q.tilt = 0;
     discover('clavileno');
-    say(Q.x, groundY(Q.x) - 50 * S, '¡Agárrate, Sancho! Lanzamientos que despegan', 2.6);
+    say(Q.x, groundY(Q.x) - 50 * S, '¡Agárrate, Sancho! Para ser memorables hay que subvertir las expectativas', 3.6, 'Q');
     const k = S * 1.1;
     for (let i = 0; i < 9; i++) addToken(Q.x + rnd(-30, 30), groundY(Q.x) - rnd(10, 40), ['★', '✦', '+1'][i % 3], true);
     for (let i = 0; i < 45; i++) CV.sparks.push({ x: Q.x - Q.dir * 20 * k, y: groundY(Q.x) - 4, vx: rnd(-90, 90), vy: rnd(-40, 30), life: 0, max: rnd(.5, 1.2) });
@@ -563,7 +563,7 @@
     const hx = shoot.x, hy = shoot.y; return Math.hypot(px - hx, py - hy) < 40;
   }
   // bocadillos de diálogo
-  function say(x, y, text, max) { speech.length = 0; speech.push({ x, y, text, life: 0, max }); }
+  function say(x, y, text, max, follow) { speech.length = 0; speech.push({ x, y, text, life: 0, max, follow }); }
 
   /* ---------- Superficie ---------- */
   const amb = x => { const a = 1 + 2.2 * boil; return Math.sin(x * .011 + T * 1.1) * a * .6 + Math.sin(x * .027 - T * 1.7) * a * .4; };
@@ -620,7 +620,7 @@
     setPtr(e);
     const x = e.clientX, y = e.clientY;
     if (clavHit(x, y)) { launchClavileno(); return; }
-    if (quijoteHit(x, y)) { if (!found.has('quijote')) chargeQuijote(); else takeOff(); return; }
+    if (quijoteHit(x, y)) { chargeQuijote(); return; }
     const m = millHit(x, y);
     if (m) { discover('molino'); spinMill(m, ['+1', 'clic', '↑', '%', 'visitas', '+1']); say(m.x, m.base - 80 * S, 'Así se mueve una web con buen tráfico', 2.4); return; }
     if (shootHit(x, y)) {
@@ -757,7 +757,10 @@
         if (Q.t > 3.2) { Q.state = 'up'; Q.t = 0; }
       } else if (Q.state === 'up') {
         Q.t += dt; Q.tumble = Math.max(0, 1 - Q.t / .5);
-        if (Q.t > .6) { Q.state = 'walk'; say(Q.x, groundY(Q.x) - 48 * S, 'Si no es por tierra, será por el aire, Sancho', 2.8); }
+        if (Q.t > .6) { Q.state = 'prep'; Q.t = 0; say(Q.x, groundY(Q.x) - 48 * S, 'Si no es por tierra, será por el aire, Sancho', 1.9); }
+      } else if (Q.state === 'prep') {
+        Q.t += dt; Q.phase += dt * 8;
+        if (Q.t > 1.9) takeOff();
       } else if (Q.state === 'fly') {
         Q.t += dt; Q.phase += dt * 12; Q.tilt = Math.min(.45, Q.t * .6);
         Q.lift += (30 + 170 * Q.t) * k2 * dt; Q.x += Q.dir * (30 + 90 * Q.t) * k2 * dt;
@@ -1067,13 +1070,14 @@
       };
       if (!found.has('agua') && vents[1]) hot(vents[1].x, surfAt(vents[1].x) + 24, 0);
       if (!found.has('molino') && mills.length) { const m = mills[(mills.length - 1) >> 1]; hot(m.x, m.base - 39 * S, .25); }
-      if ((!found.has('quijote') || !found.has('clavileno')) && Q.on && Q.state === 'walk') { const k3 = S * 1.1; hot(Q.x, groundY(Q.x) - 46 * k3, .5); }
+      if (!found.has('quijote') && Q.on && Q.state === 'walk') { const k3 = S * 1.1; hot(Q.x, groundY(Q.x) - 46 * k3, .5); }
       if (!found.has('castillo') && castle.top) hot(castle.top.x, castle.top.y - 6, .75);
       const d = sunDisc || moonPos;
       if (!found.has('cielo') && d) hot(d.x + d.r * .9, d.y - d.r * .9, .4);
       fx.globalAlpha = 1;
     }
     for (const b of speech) {
+      if (b.follow === 'Q' && Q.on) { b.x = Q.x; b.y = groundY(Q.x) - (Q.lift || 0) - 50 * S; }
       const kk = b.life / b.max, a = kk < .1 ? kk / .1 : kk > .85 ? (1 - kk) / .15 : 1;
       fx.save(); fx.globalAlpha = a; fx.font = `600 13px ${FONT}`;
       const maxW = Math.min(300, W - 48), lines = [];
