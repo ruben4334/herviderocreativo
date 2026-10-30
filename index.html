@@ -193,13 +193,12 @@
       stars: 0, glow: .15, motes: 0, flies: 0, win: 0, rim: 0, refl: .45 },
   ];
   const mix = (a, b, t) => Array.isArray(a[0]) ? a.map((v, i) => mix(v, b[i], t)) : (typeof a === 'number' ? lerp(a, b, t) : a.map((v, i) => lerp(v, b[i], t)));
+  // Solo dos versiones: NOCHE (antes del amanecer y después del ocaso) y DÍA
+  const NIGHT = KEYS[0], DAY = Object.assign({}, KEYS[KEYS.length - 1], { glow: 0, motes: 0 });
   function envFor(s) {
-    const alt = clamp(s.alt, KEYS[0].alt, KEYS[KEYS.length - 1].alt);
-    let i = 0; while (i < KEYS.length - 2 && alt > KEYS[i + 1].alt) i++;
-    const A = KEYS[i], B = KEYS[i + 1], t = (alt - A.alt) / (B.alt - A.alt);
-    const e = {};
-    for (const k in A) if (k !== 'alt') e[k] = mix(A[k], B[k], t);
-    e.alt = s.alt; e.sun = s; e.light = s.alt > 4;
+    const K = s.isDay ? DAY : NIGHT, e = {};
+    for (const k in K) if (k !== 'alt') e[k] = K[k];
+    e.alt = s.alt; e.sun = s; e.light = s.isDay;
     return e;
   }
   const rgba = c => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${c[3].toFixed(3)})`;
@@ -228,7 +227,7 @@
   document.querySelectorAll('.fade').forEach(el => setTimeout(() => el.classList.add('on'), reduce ? 0 : +el.dataset.d || 0));
 
   /* ---------- Secretos y consejos ---------- */
-  const SECRETS = ['agua', 'molino', 'quijote', 'castillo', 'cielo', 'clavileno'];
+  const SECRETS = ['agua', 'molino', 'quijote', 'castillo', 'cielo', 'clavileno', 'fuente'];
   const found = new Set();
   // el bingo solo vive en memoria: al recargar o cerrar empieza de cero (y se borra lo que guardaron versiones anteriores)
   try { localStorage.removeItem('hv-secretos'); } catch (e) {}
@@ -328,7 +327,8 @@
   const ptr = { x: -1, y: -1, px: -1, py: -1, on: false };
 
   const bedAt = x => surf + (H - surf) * .8 + noise(NZ.bed, x) * (H - surf) * .05;
-  let cones = [], crest = null, castle = null;
+  let cones = [], crest = null, castle = null, fuente = { x: 0 };
+  const fizz = [];
   const gauss = (x, c, w) => Math.exp(-(((x - c) / w) ** 2));
   const coneH = x => cones.reduce((m, c) => Math.max(m, c.h * gauss(x, c.x, c.w)), 0);
   const crestH = x => crest.h * Math.exp(-(((x - crest.x) / crest.w) ** 4));
@@ -353,6 +353,7 @@
     ];
     crest = { x: W * (sm ? .18 : .2), w: W * (sm ? .26 : .17), h: H * .07 };
     castle = { x: cones[1].x };
+    fuente = { x: W * (sm ? .55 : .7) };
     const nm = sm ? 2 : 4;
     mills = Array.from({ length: nm }, (_, i) => {
       const x = crest.x + (i - (nm - 1) / 2) * crest.w * (sm ? .62 : .42);
@@ -376,6 +377,14 @@
   }
 
   /* Paisaje fijo, pintado con la paleta de la hora */
+  function orbPos() {
+    const r = Math.max(14, H * .024);
+    if (W < 700) {   // en móvil, en el cielo libre entre el texto y las lomas
+      const top = anchor.getBoundingClientRect().bottom + r + 22, bot = surf - H * .12 - r - 16;
+      return { x: W * .62, y: Math.max(top, Math.min(bot, (top + bot) / 2)), r };
+    }
+    return { x: W * .87, y: surf * .24, r };
+  }
   function sunPos() {
     const s = env.sun;
     if (s.isDay) return { x: W * (.08 + .84 * s.p), y: surf - Math.max(0, s.alt) / 50 * surf * .9 - H * .01, up: true };
@@ -395,19 +404,23 @@
       for (const st of stars) { bg.globalAlpha = st.a * e.stars * (1 - st.y / (surf * .6)) ; bg.fillRect(st.x, st.y, st.s, st.s); }
       bg.globalAlpha = 1;
     }
-    // luna de noche
-    const s = e.sun;
-    if (!s.isDay && e.stars > .3) {
-      const side = s.q < .5 ? 1 : 0, mx = side ? W * (W < 700 ? .84 : .87) : W * (W < 700 ? .16 : .13);
-      const my = surf * (.16 + .3 * Math.abs(.5 - s.q) * 2), mr = Math.max(12, H * .022);
-      moonPos = { x: mx, y: my, r: mr };
-      const mg = bg.createRadialGradient(mx, my, 0, mx, my, mr * 7);
-      mg.addColorStop(0, `rgba(210,220,255,${.25 * e.stars})`); mg.addColorStop(1, 'rgba(210,220,255,0)');
-      bg.fillStyle = mg; bg.fillRect(mx - mr * 7, my - mr * 7, mr * 14, mr * 14);
-      bg.globalAlpha = e.stars; bg.fillStyle = '#eef0ff'; bg.beginPath(); bg.arc(mx, my, mr, 0, 6.2832); bg.fill();
+    // sol (día) o luna (noche): mismo sitio, mismo tamaño, sin tapar el texto
+    const s = e.sun, o = orbPos();
+    if (s.isDay) {
+      const g = bg.createRadialGradient(o.x, o.y, o.r * .8, o.x, o.y, o.r * 4.5);
+      g.addColorStop(0, 'rgba(255,244,200,.55)'); g.addColorStop(1, 'rgba(255,244,200,0)');
+      bg.fillStyle = g; bg.fillRect(o.x - o.r * 4.5, o.y - o.r * 4.5, o.r * 9, o.r * 9);
+      bg.fillStyle = '#ffe48f'; bg.beginPath(); bg.arc(o.x, o.y, o.r, 0, 6.2832); bg.fill();
+      bg.fillStyle = 'rgba(255,253,235,.75)'; bg.beginPath(); bg.arc(o.x - o.r * .22, o.y - o.r * .22, o.r * .55, 0, 6.2832); bg.fill();
+      sunDisc = { x: o.x, y: o.y, r: o.r };
+    } else {
+      const mg = bg.createRadialGradient(o.x, o.y, 0, o.x, o.y, o.r * 7);
+      mg.addColorStop(0, 'rgba(210,220,255,.25)'); mg.addColorStop(1, 'rgba(210,220,255,0)');
+      bg.fillStyle = mg; bg.fillRect(o.x - o.r * 7, o.y - o.r * 7, o.r * 14, o.r * 14);
+      bg.fillStyle = '#eef0ff'; bg.beginPath(); bg.arc(o.x, o.y, o.r, 0, 6.2832); bg.fill();
       bg.fillStyle = 'rgba(180,190,220,.35)';
-      [[-.3, -.2, .22], [.25, .15, .16], [-.05, .35, .12]].forEach(([dx, dy, r]) => { bg.beginPath(); bg.arc(mx + dx * mr, my + dy * mr, r * mr, 0, 6.2832); bg.fill(); });
-      bg.globalAlpha = 1;
+      [[-.3, -.2, .22], [.25, .15, .16], [-.05, .35, .12]].forEach(([dx, dy, r]) => { bg.beginPath(); bg.arc(o.x + dx * o.r, o.y + dy * o.r, r * o.r, 0, 6.2832); bg.fill(); });
+      moonPos = { x: o.x, y: o.y, r: o.r };
     }
     // nubes alargadas
     const R = seeded(SEED + 7);
@@ -417,23 +430,6 @@
       g.addColorStop(0, rgba([c[0], c[1], c[2], 0])); g.addColorStop(.5, rgba([c[0], c[1], c[2], c[3] * (.7 + R() * .5)])); g.addColorStop(1, rgba([c[0], c[1], c[2], 0]));
       bg.fillStyle = g; bg.beginPath(); bg.ellipse(cx, cy, cw, ch, 0, 0, 6.2832); bg.fill();
     }
-    // sol o resplandor del crepúsculo
-    const sp = sunPos(), warm = e.glow;
-    if (warm > .02) {
-      const halo = bg.createRadialGradient(sp.x, Math.min(sp.y, surf), 0, sp.x, Math.min(sp.y, surf), Math.max(W, H) * .6);
-      halo.addColorStop(0, `rgba(255,214,140,${.7 * warm})`); halo.addColorStop(.12, `rgba(255,170,90,${.32 * warm})`); halo.addColorStop(1, 'rgba(255,140,80,0)');
-      bg.fillStyle = halo; bg.fillRect(0, 0, W, surf + 2);
-    }
-    if (sp.up) {
-      const sr = Math.max(24, H * .045) * (s.alt > 10 ? .8 : 1);
-      const day = clamp(s.alt / 20, 0, 1);
-      sunDisc = { x: sp.x, y: sp.y, r: sr };
-      const g2 = bg.createRadialGradient(sp.x, sp.y, 0, sp.x, sp.y, sr * 5);
-      g2.addColorStop(0, `rgba(255,250,230,${.45 + .2 * day})`); g2.addColorStop(1, 'rgba(255,250,230,0)');
-      bg.fillStyle = g2; bg.fillRect(sp.x - sr * 5, sp.y - sr * 5, sr * 10, sr * 10);
-      bg.fillStyle = day > .5 ? '#fffbea' : '#ffe2a3'; bg.beginPath(); bg.arc(sp.x, sp.y, sr, 0, 6.2832); bg.fill();
-    }
-
     // sierra lejana
     bg.beginPath(); bg.moveTo(0, surf + 2);
     for (let x = 0; x <= W + 6; x += 6) bg.lineTo(x, surf - H * .05 - noise(NZ.far, x) * H * .012);
@@ -451,6 +447,43 @@
     for (let i = -9; i < 9; i += 3) bg.fillRect(castle.x + i * u, cb - 6.2 * u, 1.6 * u, 1.4 * u);
     for (let i = -2.5; i < 3.5; i += 2.2) bg.fillRect(castle.x + i * u, cb - 12.2 * u, 1.3 * u, 1.4 * u);
     if (e.win > .05) { bg.fillStyle = `rgba(255,190,110,${.8 * e.win})`; bg.fillRect(castle.x - .3 * u, cb - 8 * u, 1.2 * u, 1.8 * u); }
+    // hervidero de agua agria: bombo de mampostería con bóveda de ladrillo y poza redonda con escalones
+    {
+      const fx0 = fuente.x, gnd = Math.min(surf - 6 - coneH(fx0), surf - crestH(fx0), surf - 2) + 1, u = (W < 700 ? 3.4 : 4) * S;
+      fuente.base = gnd; fuente.u = u; fuente.pool = { x: fx0 + 7.5 * u, y: gnd - .2 * u };
+      fuente.box = [fx0 - 9 * u, gnd - 10 * u, fx0 + 13 * u, gnd + 3];
+      const day = e.light;
+      // árbol junto a la escalera
+      bg.fillStyle = rgba(e.olive);
+      bg.fillRect(fx0 + 12.2 * u, gnd - 4.5 * u, .7 * u, 4.5 * u);
+      bg.beginPath(); bg.ellipse(fx0 + 12.5 * u, gnd - 6 * u, 2.6 * u, 2 * u, 0, 0, 6.2832); bg.fill();
+      // bombo: muro circular de mampostería
+      bg.fillStyle = day ? '#cdb894' : rgba(e.castle);
+      bg.fillRect(fx0 - 4.5 * u, gnd - 4.6 * u, 9 * u, 4.6 * u);
+      if (day) {
+        bg.strokeStyle = 'rgba(70,50,30,.22)'; bg.lineWidth = Math.max(.6, .18 * u); bg.beginPath();
+        for (let r = 1; r < 4; r++) { const yy = gnd - r * 1.15 * u; bg.moveTo(fx0 - 4.5 * u, yy); bg.lineTo(fx0 + 4.5 * u, yy); }
+        for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) { const xx = fx0 - 4.5 * u + (c + (r % 2 ? .5 : 1)) * 2.25 * u; if (xx < fx0 + 4.4 * u) { bg.moveTo(xx, gnd - r * 1.15 * u); bg.lineTo(xx, gnd - (r + 1) * 1.15 * u); } }
+        bg.stroke();
+        bg.fillStyle = 'rgba(0,0,0,.12)'; bg.fillRect(fx0 + 1.5 * u, gnd - 4.6 * u, 3 * u, 4.6 * u);
+      }
+      // bóveda de ladrillo
+      bg.fillStyle = day ? '#b4643c' : rgba(e.cap);
+      bg.beginPath(); bg.ellipse(fx0, gnd - 4.6 * u, 4.9 * u, 4 * u, 0, Math.PI, 0); bg.closePath(); bg.fill();
+      if (day) { bg.strokeStyle = 'rgba(80,30,10,.35)'; bg.lineWidth = Math.max(.6, .16 * u); bg.beginPath();
+        for (let i = 1; i < 3; i++) { bg.ellipse(fx0, gnd - 4.6 * u, 4.9 * u * (1 - i * .3), 4 * u * (1 - i * .3), 0, Math.PI, 0); } bg.stroke(); }
+      // puerta en arco
+      bg.fillStyle = day ? '#3a2618' : (e.win > .05 ? `rgba(255,190,110,${.55 * e.win})` : 'rgba(0,0,0,.5)');
+      bg.beginPath(); bg.moveTo(fx0 - 1.2 * u, gnd); bg.lineTo(fx0 - 1.2 * u, gnd - 2.4 * u); bg.arc(fx0, gnd - 2.4 * u, 1.2 * u, Math.PI, 0); bg.lineTo(fx0 + 1.2 * u, gnd); bg.closePath(); bg.fill();
+      // poza redonda con escalones
+      const pp = fuente.pool;
+      bg.fillStyle = day ? '#bfae8c' : rgba(e.castle);
+      bg.beginPath(); bg.ellipse(pp.x, pp.y, 4.6 * u, 1.5 * u, 0, 0, 6.2832); bg.fill();
+      bg.fillStyle = day ? '#4f9aa2' : '#2a4058';
+      bg.beginPath(); bg.ellipse(pp.x, pp.y, 3.8 * u, 1.05 * u, 0, 0, 6.2832); bg.fill();
+      bg.fillStyle = day ? '#a8977a' : rgba(e.cap);
+      for (let i = 0; i < 3; i++) bg.fillRect(pp.x + 3.6 * u + i * .7 * u, pp.y - .6 * u + i * .45 * u, .9 * u, .45 * u);
+    }
     // loma de los molinos
     bg.beginPath(); bg.moveTo(0, surf + 2);
     for (let x = 0; x <= W + 4; x += 4) bg.lineTo(x, surf - crestH(x));
@@ -513,6 +546,7 @@
     discover('quijote');
     Q.state = Q.target ? 'charge' : 'walk';
   }
+  function fuenteHit(px, py) { const b = fuente.box; return b && px > b[0] && px < b[2] && py > b[1] && py < b[3]; }
   function castleHit(px, py) { const b = castle.box; return b && px > b[0] && px < b[2] && py > b[1] - 8 && py < b[3]; }
   function skyHit(px, py) { const d = sunDisc || moonPos; return d && Math.hypot(px - d.x, py - d.y) < d.r * 1.8 + 10 ? d : null; }
   function drawFlag(ctx) {
@@ -614,7 +648,7 @@
   back.addEventListener('pointermove', e => {
     setPtr(e);
     const X = e.clientX, Y = e.clientY;
-    back.style.cursor = (clavHit(X, Y) || quijoteHit(X, Y) || millHit(X, Y) || shootHit(X, Y) || castleHit(X, Y) || skyHit(X, Y)) ? 'help' : 'pointer';
+    back.style.cursor = (fuenteHit(X, Y) || clavHit(X, Y) || quijoteHit(X, Y) || millHit(X, Y) || shootHit(X, Y) || castleHit(X, Y) || skyHit(X, Y)) ? 'help' : 'pointer';
   });
   back.addEventListener('pointerleave', () => ptr.on = false);
   back.addEventListener('contextmenu', e => e.preventDefault());
@@ -631,6 +665,13 @@
     if (shootHit(x, y)) {
       for (let i = 0; i < 8; i++) addToken(shoot.x + rnd(-20, 20), shoot.y + rnd(-10, 10), ['★', '✦', '+1', '♥'][i % 4], true);
       say(shoot.x, shoot.y - 16, 'Deseo concedido: más clientes ✦', 2.6); shoot = null; return;
+    }
+    if (fuenteHit(x, y)) {
+      discover('fuente');
+      const pp = fuente.pool, u = fuente.u;
+      for (let i = 0; i < 40; i++) fizz.push({ x: pp.x + rnd(-3.5, 3.5) * u, y: pp.y, vx: rnd(-8, 8), vy: -rnd(25, 80), r: rnd(1, 2.6), life: 0, max: rnd(1, 2.2) });
+      say(pp.x, fuente.box[1] - 4, 'Agua agria: hierve sola, sin fuego. Como las buenas ideas', 3.4);
+      return;
     }
     if (castleHit(x, y)) {
       discover('castillo');
@@ -801,6 +842,7 @@
       if (Math.random() < .55) CV.sparks.push({ x: CV.x - 17 * S, y: CV.y + 1 * S, vx: rnd(-60, -20), vy: rnd(-12, 18), life: 0, max: rnd(.4, .9) });
       if (CV.x > W + 80 || CV.base < -40) { CV.on = false; CV.next = rnd(35, 55); }
     }
+    for (let i = fizz.length - 1; i >= 0; i--) { const f = fizz[i]; f.life += dt; f.x += (f.vx + Math.sin(T * 6 + i) * 6) * dt; f.y += f.vy * dt; f.vy *= (1 - .6 * dt); if (f.life > f.max) fizz.splice(i, 1); }
     for (let i = CV.sparks.length - 1; i >= 0; i--) { const p = CV.sparks[i]; p.life += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 40 * dt; if (p.life > p.max) CV.sparks.splice(i, 1); }
     // estrella fugaz (solo de noche)
     shootT -= dt;
@@ -920,6 +962,16 @@
     sc.drawImage(bgC, 0, 0, W, surf + 2);
     for (const m of mills) drawSails(sc, m);
     drawFlag(sc);
+    if (fuente.pool) {
+      const u = fuente.u, pp = fuente.pool;
+      sc.strokeStyle = env.light ? 'rgba(255,255,255,.85)' : 'rgba(220,230,255,.6)'; sc.lineWidth = Math.max(.6, .16 * u);
+      for (let i = 0; i < 6; i++) {
+        const ph = (T * (.7 + i * .09) + i / 6) % 1;
+        sc.globalAlpha = 1 - ph; sc.beginPath();
+        sc.arc(pp.x + (i - 2.5) * 1.15 * u, pp.y - .2 * u - ph * 1.6 * u, .28 * u * (1 + ph), 0, 6.2832); sc.stroke();
+      }
+      sc.globalAlpha = 1;
+    }
     drawQuijote(sc);
     x.drawImage(scC, 0, 0, W, surf + 2);
 
@@ -943,6 +995,7 @@
       for (const p of CV.sparks) { const a = 1 - p.life / p.max; x.fillStyle = `rgba(255,${150 + 80 * a | 0},70,${.85 * a})`; x.beginPath(); x.arc(p.x, p.y, 1.2 + 1.6 * a, 0, 6.2832); x.fill(); }
       x.globalCompositeOperation = 'source-over';
     }
+    if (fizz.length) { x.lineWidth = 1; for (const f of fizz) { x.strokeStyle = `rgba(255,255,255,${(1 - f.life / f.max) * .85})`; x.beginPath(); x.arc(f.x, f.y, f.r, 0, 6.2832); x.stroke(); } }
     if (CV.on) drawClavileno(x);
     if (flock) {
       x.strokeStyle = rgba(e.bird); x.lineWidth = 1.4; x.lineCap = 'round';
@@ -1093,6 +1146,7 @@
       if (!found.has('agua') && vents[1]) hot(vents[1].x, surfAt(vents[1].x) + 24, 0);
       if (!found.has('molino') && mills.length) { const m = mills[(mills.length - 1) >> 1]; hot(m.x, m.base - 39 * S, .25); }
       if ((!found.has('quijote') || !found.has('clavileno')) && Q.on && Q.state === 'walk') { const k3 = S * 1.1; hot(Q.x, groundY(Q.x) - 46 * k3, .5); }
+      if (!found.has('fuente') && fuente.box) hot(fuente.x, fuente.box[1] - 2, .85);
       if (!found.has('castillo') && castle.top) hot(castle.top.x, castle.top.y - 6, .75);
       const d = sunDisc || moonPos;
       if (!found.has('cielo') && d) hot(d.x + d.r * .9, d.y - d.r * .9, .4);
@@ -1130,7 +1184,7 @@
     }
   }
 
-  if (params.has('debug')) window.__hv = { Q, CV, groundY, mills, spawnQuijote, castle, found, get castleNow() { return castle; }, get S() { return S; } };
+  if (params.has('debug')) window.__hv = { Q, CV, get fuente() { return fuente; }, groundY, mills, spawnQuijote, castle, found, get castleNow() { return castle; }, get S() { return S; } };
   requestAnimationFrame(frame);
 })();
 </script>
