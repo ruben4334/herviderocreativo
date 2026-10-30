@@ -227,7 +227,7 @@
   document.querySelectorAll('.fade').forEach(el => setTimeout(() => el.classList.add('on'), reduce ? 0 : +el.dataset.d || 0));
 
   /* ---------- Secretos y consejos ---------- */
-  const SECRETS = ['agua', 'molino', 'quijote', 'castillo', 'cielo', 'clavileno', 'fuente'];
+  const SECRETS = ['agua', 'molino', 'quijote', 'castillo', 'cielo', 'clavileno'];
   const found = new Set();
   // el bingo solo vive en memoria: al recargar o cerrar empieza de cero (y se borra lo que guardaron versiones anteriores)
   try { localStorage.removeItem('hv-secretos'); } catch (e) {}
@@ -648,7 +648,7 @@
   back.addEventListener('pointermove', e => {
     setPtr(e);
     const X = e.clientX, Y = e.clientY;
-    back.style.cursor = (fuenteHit(X, Y) || clavHit(X, Y) || quijoteHit(X, Y) || millHit(X, Y) || shootHit(X, Y) || castleHit(X, Y) || skyHit(X, Y)) ? 'help' : 'pointer';
+    back.style.cursor = (clavHit(X, Y) || quijoteHit(X, Y) || millHit(X, Y) || shootHit(X, Y) || castleHit(X, Y) || skyHit(X, Y)) ? 'help' : 'pointer';
   });
   back.addEventListener('pointerleave', () => ptr.on = false);
   back.addEventListener('contextmenu', e => e.preventDefault());
@@ -665,13 +665,6 @@
     if (shootHit(x, y)) {
       for (let i = 0; i < 8; i++) addToken(shoot.x + rnd(-20, 20), shoot.y + rnd(-10, 10), ['★', '✦', '+1', '♥'][i % 4], true);
       say(shoot.x, shoot.y - 16, 'Deseo concedido: más clientes ✦', 2.6); shoot = null; return;
-    }
-    if (fuenteHit(x, y)) {
-      discover('fuente');
-      const pp = fuente.pool, u = fuente.u;
-      for (let i = 0; i < 40; i++) fizz.push({ x: pp.x + rnd(-3.5, 3.5) * u, y: pp.y, vx: rnd(-8, 8), vy: -rnd(25, 80), r: rnd(1, 2.6), life: 0, max: rnd(1, 2.2) });
-      say(pp.x, fuente.box[1] - 4, 'Agua agria: hierve sola, sin fuego. Como las buenas ideas', 3.4);
-      return;
     }
     if (castleHit(x, y)) {
       discover('castillo');
@@ -1146,7 +1139,6 @@
       if (!found.has('agua') && vents[1]) hot(vents[1].x, surfAt(vents[1].x) + 24, 0);
       if (!found.has('molino') && mills.length) { const m = mills[(mills.length - 1) >> 1]; hot(m.x, m.base - 39 * S, .25); }
       if ((!found.has('quijote') || !found.has('clavileno')) && Q.on && Q.state === 'walk') { const k3 = S * 1.1; hot(Q.x, groundY(Q.x) - 46 * k3, .5); }
-      if (!found.has('fuente') && fuente.box) hot(fuente.x, fuente.box[1] - 2, .85);
       if (!found.has('castillo') && castle.top) hot(castle.top.x, castle.top.y - 6, .75);
       const d = sunDisc || moonPos;
       if (!found.has('cielo') && d) hot(d.x + d.r * .9, d.y - d.r * .9, .4);
